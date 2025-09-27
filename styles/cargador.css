@@ -1,0 +1,148 @@
+/* Toast de mensajes flotantes */
+.mensaje-toast {
+    position: fixed;
+    right: 32px;
+    bottom: 32px;
+    min-width: 220px;
+    max-width: 90vw;
+    padding: 16px 28px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #fff;
+    background: #43a047;
+    box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.13);
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.4s;
+    pointer-events: none;
+}
+.mensaje-toast.error {
+    background: #e53935;
+}
+.mensaje-toast.exito {
+    background: #43a047;
+}
+body {
+    font-family: 'Montserrat', Arial, sans-serif;
+    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.btn-cerrar-sesion {
+    position: fixed;
+    top: 32px;
+    right: 48px;
+    background: linear-gradient(90deg, #1976d2 60%, #26c6da 100%);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 24px;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: background 0.3s, transform 0.1s;
+    z-index: 100;
+}
+.btn-cerrar-sesion:hover {
+    background: linear-gradient(90deg, #004d40 60%, #0288d1 100%);
+    transform: translateY(-2px) scale(1.04);
+}
+.btn-cerrar-sesion:active {
+    transform: scale(0.98);
+}
+
+.container {
+    max-width: 500px;
+    margin: 40px auto;
+    background: rgba(255,255,255,0.97);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    padding: 44px 32px 32px 32px;
+    text-align: center;
+    position: relative;
+}
+
+h1 {
+    color: #00796b;
+    margin-bottom: 24px;
+    font-weight: 700;
+    font-size: 2em;
+}
+
+p {
+    color: #333;
+    font-size: 1.1em;
+}
+
+#map {
+    width: 100%;
+    min-width: 300px;
+    height: 340px;
+    margin-bottom: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.13);
+    background: #e0f7fa;
+    overflow: hidden;
+}
+#formCargador { display: flex; gap: 10px; align-items: center; width: 100%; margin-bottom: 18px; }
+#formCargador input { flex: 1; border-radius: 7px; border: 1px solid #b2ebf2; padding: 8px; font-size: 1em; }
+#formCargador button { min-width: 140px; border-radius: 7px; border: none; background: linear-gradient(90deg, #1976d2 60%, #26c6da 100%); color: #fff; font-weight: 600; font-size: 1em; padding: 8px 0; cursor: pointer; transition: background 0.3s, transform 0.1s; }
+#formCargador button:disabled { background: #bdbdbd; color: #fff; cursor: not-allowed; }
+#formCargador button:hover:not(:disabled) { background: linear-gradient(90deg, #004d40 60%, #0288d1 100%); transform: translateY(-2px) scale(1.04); }
+#listaCargadores { margin-top: 0; width: 100%; max-width: 600px; }
+
+@media (max-width: 800px) {
+    .container { padding: 12px 2vw; }
+    .btn-cerrar-sesion { right: 12px; top: 12px; }
+}
+
+.btn-editar, .btn-guardar, .btn-cancelar, .btn-eliminar, .btn-ver-mapa {
+    border: none;
+    border-radius: 7px;
+    padding: 7px 16px;
+    font-size: 1em;
+    font-weight: 600;
+    margin: 0 2px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+}
+.btn-editar { background: #26c6da; color: #fff; }
+.btn-guardar { background: #43a047; color: #fff; }
+.btn-cancelar { background: #bdbdbd; color: #fff; }
+.btn-eliminar { background: #e53935; color: #fff; }
+.btn-ver-mapa {
+    background: linear-gradient(90deg, #00bcd4 60%, #4dd0e1 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border: none;
+    border-radius: 7px;
+    padding: 7px 16px;
+    font-size: 1em;
+    font-weight: 600;
+    margin: 0 2px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+}
+.btn-editar:hover { background: #0097a7; }
+.btn-guardar:hover { background: #388e3c; }
+.btn-cancelar:hover { background: #757575; }
+.btn-eliminar:hover { background: #b71c1c; }
+.btn-ver-mapa:hover {
+    background: linear-gradient(90deg, #0288d1 60%, #00bcd4 100%);
+    transform: translateY(-2px) scale(1.04);
+}
+.mensaje {
+    margin-top: 18px;
+    padding: 10px 18px;
+    border-radius: 7px;
+    font-size: 1em;
+    font-weight: 600;
+    display: inline-block;
+}
+.mensaje.exito { background: #c8e6c9; color: #256029; }
+.mensaje.error { background: #ffcdd2; color: #b71c1c; }
+

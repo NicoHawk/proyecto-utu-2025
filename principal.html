@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Página Principal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles/principal.css">
+</head>
+<body>
+    <div class="top-right">
+        <a href="index.php">Iniciar Sesión</a>
+        <a href="registro.html">Registrarse</a>
+    </div>
+    <div class="seccion seccion-1">
+        <div class="titulo">Bienvenido a Gestión de Autos Eléctricos</div>
+        <div class="subtitulo">Encuentra cargadores, gestiona tu cuenta y explora autos eléctricos fácilmente.</div>
+    </div>
+    <div class="seccion seccion-2">
+        <div class="info-map-row">
+            <div class="info">
+                <h2>¿Por qué elegirnos?</h2>
+                <p>
+                    Nuestra plataforma te permite localizar cargadores para autos eléctricos, gestionar tu información y descubrir los mejores modelos del mercado.<br>
+                    ¡Únete a la movilidad sostenible!
+                </p>
+            </div>
+            <div>
+                <div class="map-title">Cargadores Cercanos</div>
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Obtener cargadores desde el backend
+        fetch('controlador/CargadorControlador.php?accion=listar')
+            .then(response => response.json())
+            .then(cargadores => {
+                // Si no hay cargadores, centramos el mapa en una ubicación por defecto
+                let center = cargadores.length > 0
+                    ? [cargadores[0].latitud, cargadores[0].longitud]
+                    : [-34.6037, -58.3816];
+
+                var map = L.map('map').setView(center, 12);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                cargadores.forEach(function(c) {
+                    L.marker([c.latitud, c.longitud]).addTo(map)
+                        .bindPopup('<b>' + c.nombre + '</b>');
+                });
+            })
+            .catch(() => {
+                // Si falla la carga, igual mostramos el mapa vacío
+                var map = L.map('map').setView([-34.6037, -58.3816], 11);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+            });
+    </script>
+</body>
+</html>

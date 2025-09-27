@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Cargador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/cargador.css">
+</head>
+<body>
+    <div class="container">
+        <button class="btn-cerrar-sesion" onclick="window.location.href='index.php'">Cerrar sesión</button>
+        <h1>Panel de Cargador</h1>
+        <p>Has iniciado sesión como usuario de tipo <b>cargador</b>.<br>Aquí podrás gestionar los puntos de carga.</p>
+        <h2 style="margin-bottom: 10px; color:#1976d2; text-align:center;">Mapa de cargadores</h2>
+        <div id="map"></div>
+        <form id="formCargador">
+            <input type="text" id="nombreCargador" placeholder="Nombre del cargador" required>
+            <button type="submit" disabled>Agregar cargador</button>
+            <span id="ubicacionSeleccionada" style="font-size: 0.9em; color: #555;"></span>
+        </form>
+        <div id="listaCargadores"></div>
+    </div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcstapgk7BG-qavJNSKsSWIeYCv_h0wXU&callback=initMap" async defer></script>
+    <script>
+    let map;
+    let marcadores = {};
+    let ubicacionTemporal = null;
+
+    function initMap() {
+        const centro = { lat: -34.7176, lng: -55.9586 };
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 13,
+            center: centro,
+        });
+        fetch('api/cargadores.php?accion=listar', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(cargadores => {
+            console.log('Respuesta de la API cargadores:', cargadores);
+            if (Array.isArray(cargadores)) {
+                mostrarListaCargadores(cargadores);
+                cargadores.forEach(cargador => {
+                    const lat = parseFloat(cargador.latitud);
+                    const lng = parseFloat(cargador.longitud);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        console.log('Agregando marcador:', cargador.nombre, lat, lng);
+                        agregarCargador(cargador.id, cargador.nombre, {lat: lat, lng: lng});
+                    } else {
+                        console.warn('Cargador con lat/lng inválido:', cargador);
+                    }
+                });
+            } else {
+                console.error('La respuesta de la API no es un array:', cargadores);
+                document.getElementById('listaCargadores').innerHTML = '<p style="color:red">Error al cargar los cargadores. Consulta la consola.</p>';
+            }
+        });
+        map.addListener("click", function(e) {
+            ubicacionTemporal = e.latLng;
+            document.getElementById("ubicacionSeleccionada").textContent = "Ubicación seleccionada";
+            document.querySelector("#formCargador button[type='submit']").disabled = false;
+            if (marcadores['temporal']) {
+                marcadores['temporal'].setMap(null);
+            }
+            marcadores['temporal'] = new google.maps.Marker({
+                position: ubicacionTemporal,
+                map,
+                icon: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
+                title: "Ubicación seleccionada"
+            });
+        });
+    }
+
+    function agregarCargador(id, nombre, latLng) {
+        if (marcadores['temporal']) {
+            marcadores['temporal'].setMap(null);
+            delete marcadores['temporal'];
+        }
+        const infoWindow = new google.maps.InfoWindow({ content: `<strong>${nombre}</strong>` });
+        const marcador = new google.maps.Marker({
+            position: latLng,
+            map,
+            title: nombre,
+            icon: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+        });
+        marcador.addListener('click', function() { infoWindow.open(map, marcador); });
+        marcadores[id] = marcador;
+    }
+
+    function mostrarListaCargadores(cargadores) {
+        const listaDiv = document.getElementById('listaCargadores');
+        if (cargadores.length === 0) {
+            listaDiv.innerHTML = "<p>No hay cargadores registrados.</p>";
+            return;
+        }
+        let html = "<h3>Lista de cargadores</h3><ul style='list-style:none;padding:0;'>";
+        cargadores.forEach(cargador => {
+            html += `<li style='margin-bottom:10px;'>`;
+            html += `<strong>${cargador.nombre}</strong>`;
+            html += `<button class='btn-ver-mapa' onclick="centrarEnCargador(${cargador.id})" style='margin-left:10px;'>Ver en mapa</button>`;
+            html += `<button class='btn-eliminar' onclick="eliminarCargador(${cargador.id})" style='margin-left:10px;'>Eliminar</button>`;
+            html += `</li>`;
+        });
+        html += "</ul>";
+        listaDiv.innerHTML = html;
+        // Depuración: mostrar en consola la lista generada
+        console.log('HTML lista cargadores:', html);
+    }
+
+    window.centrarEnCargador = function(id) {
+        const marcador = marcadores[id];
+        if (marcador) {
+            map.setCenter(marcador.getPosition());
+            map.setZoom(16);
+            new google.maps.event.trigger(marcador, 'click');
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById("formCargador");
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+            if (ubicacionTemporal) {
+                const nombre = document.getElementById("nombreCargador").value;
+                fetch('api/cargadores.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        accion: 'agregar',
+                        nombre: nombre,
+                        latitud: ubicacionTemporal.lat(),
+                        longitud: ubicacionTemporal.lng()
+                    })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if(res.exito){
+                        // Mensaje de éxito
+                        mostrarMensaje('Cargador agregado exitosamente', 'exito');
+                        // Actualizar lista y mapa instantáneamente
+                        fetch('api/cargadores.php?accion=listar', {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' }
+                        })
+                        .then(res => res.json())
+                        .then(cargadores => {
+                            mostrarListaCargadores(cargadores);
+                            Object.values(marcadores).forEach(m => m.setMap(null));
+                            marcadores = {};
+                            cargadores.forEach(cargador => {
+                                agregarCargador(cargador.id, cargador.nombre, {lat: parseFloat(cargador.latitud), lng: parseFloat(cargador.longitud)});
+                            });
+                        });
+                    } else {
+                        mostrarMensaje(res.mensaje || 'No se pudo agregar el cargador', 'error');
+                    }
+                });
+                form.reset();
+                document.getElementById("ubicacionSeleccionada").textContent = "";
+                ubicacionTemporal = null;
+                form.querySelector("button[type='submit']").disabled = true;
+            }
+        });
+
+    // Función para mostrar mensajes tipo toast abajo a la derecha
+    window.mostrarMensaje = function(texto, tipo) {
+        let toast = document.createElement('div');
+        toast.className = 'mensaje-toast ' + (tipo === 'exito' ? 'exito' : 'error');
+        toast.textContent = texto;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }, 2200);
+    }
+    });
+
+    window.eliminarCargador = function(id) {
+        if (confirm("¿Eliminar este cargador?")) {
+            fetch('api/cargadores.php', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accion: 'eliminar', id: id })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.exito) {
+                    window.mostrarMensaje(res.mensaje || "Cargador eliminado", 'exito');
+                    // Actualizar lista y mapa instantáneamente
+                    fetch('api/cargadores.php?accion=listar', {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    })
+                    .then(res => res.json())
+                    .then(cargadores => {
+                        mostrarListaCargadores(cargadores);
+                        Object.values(marcadores).forEach(m => m.setMap(null));
+                        marcadores = {};
+                        cargadores.forEach(cargador => {
+                            agregarCargador(cargador.id, cargador.nombre, {lat: parseFloat(cargador.latitud), lng: parseFloat(cargador.longitud)});
+                        });
+                    });
+                } else {
+                    window.mostrarMensaje(res.mensaje || "No se pudo eliminar el cargador.", 'error');
+                }
+            })
+            .catch(() => window.mostrarMensaje("Error de conexión al eliminar el cargador.", 'error'));
+        }
+    }
+    </script>
+</body>
+</html>
