@@ -71,7 +71,7 @@ exit;
             });
 
             // Cargar cargadores guardados
-            fetch('controlador/CargadorControlador.php?accion=listar')
+            fetch('api/cargadores.php')
                 .then(res => res.json())
                 .then(cargadores => {
                     mostrarListaCargadores(cargadores);
@@ -169,7 +169,7 @@ exit;
                     .then(res => {
                         if(res.exito){
                             // Recargar lista y marcadores
-                            fetch('api/admin.php?listar_cargadores=1')
+                            fetch('api/cargadores.php')
                                 .then(res => res.json())
                                 .then(cargadores => {
                                     mostrarListaCargadores(cargadores);
@@ -314,7 +314,7 @@ exit;
                     if (res.exito) {
                         alert(res.mensaje || "Cargador eliminado");
                         // Recargar lista y marcadores
-                        fetch('api/admin.php?listar_cargadores=1')
+                        fetch('api/cargadores.php')
                             .then(res => res.json())
                             .then(cargadores => {
                                 mostrarListaCargadores(cargadores);

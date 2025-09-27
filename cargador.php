@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
+    header('Location: index.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,7 +15,7 @@
 </head>
 <body>
     <div class="container">
-        <button class="btn-cerrar-sesion" onclick="window.location.href='index.php'">Cerrar sesión</button>
+        <button class="btn-cerrar-sesion" onclick="window.location.href='logout.php'">Cerrar sesión</button>
         <h1>Panel de Cargador</h1>
         <p>Has iniciado sesión como usuario de tipo <b>cargador</b>.<br>Aquí podrás gestionar los puntos de carga.</p>
         <h2 style="margin-bottom: 10px; color:#1976d2; text-align:center;">Mapa de cargadores</h2>

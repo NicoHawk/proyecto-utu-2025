@@ -5,7 +5,7 @@ function listarCargadores($conn) {
     $sql = "SELECT * FROM cargadores";
     $result = $conn->query($sql);
     $cargadores = [];
-    while($row = $result->fetch_assoc()) {
+        while($row = $result->fetch(PDO::FETCH_ASSOC)) {
         $cargadores[] = $row;
     }
     return $cargadores;
@@ -13,17 +13,11 @@ function listarCargadores($conn) {
 
 function agregarCargador($conn, $nombre, $latitud, $longitud) {
     $stmt = $conn->prepare("INSERT INTO cargadores (nombre, latitud, longitud) VALUES (?, ?, ?)");
-    $stmt->bind_param("sdd", $nombre, $latitud, $longitud);
-    $res = $stmt->execute();
-    $stmt->close();
-    return $res;
+    return $stmt->execute([$nombre, $latitud, $longitud]);
 }
 
 function eliminarCargador($conn, $id) {
     $stmt = $conn->prepare("DELETE FROM cargadores WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    $res = $stmt->execute();
-    $stmt->close();
-    return $res;
+    return $stmt->execute([$id]);
 }
 ?>

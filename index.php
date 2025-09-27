@@ -58,7 +58,7 @@
                             } else if (data.tipo_usuario === 'cliente') {
                                 window.location.href = 'cliente.php';
                             } else if (data.tipo_usuario === 'cargador') {
-                                window.location.href = 'cargador.html';
+                                window.location.href = 'cargador.php';
                             }
                         }, 900);
                     } else {

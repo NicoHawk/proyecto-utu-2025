@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../controlador/CargadorControlador.php';
+require_once __DIR__ . '/../db.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -8,6 +9,8 @@ header('Content-Type: application/json');
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+$conn = conectar();
+
 switch ($method) {
     case 'OPTIONS':
         http_response_code(200);
@@ -15,8 +18,8 @@ switch ($method) {
 
     case 'GET':
         // Listar cargadores
-        $_POST['accion'] = 'listar';
-        require __DIR__ . '/../controlador/CargadorControlador.php';
+        $cargadores = listarCargadores($conn);
+        echo json_encode($cargadores);
         break;
 
     case 'POST':
@@ -27,29 +30,23 @@ switch ($method) {
         } else {
             $input = $_POST;
         }
-        if (isset($input['accion'])) {
-            $_POST = $input; // Para que CargadorControlador.php lo procese igual
-            require __DIR__ . '/../controlador/CargadorControlador.php';
+        if (isset($input['accion']) && $input['accion'] === 'agregar') {
+            $nombre = $input['nombre'] ?? '';
+            $latitud = $input['latitud'] ?? '';
+            $longitud = $input['longitud'] ?? '';
+            $res = agregarCargador($conn, $nombre, $latitud, $longitud);
+            echo json_encode(['exito' => $res]);
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción POST no soportada']);
-        }
-        break;
-
-    case 'PUT':
-        $input = json_decode(file_get_contents("php://input"), true);
-        if ($input && isset($input['accion']) && $input['accion'] === 'agregar') {
-            $_POST = $input;
-            require __DIR__ . '/../controlador/CargadorControlador.php';
-        } else {
-            echo json_encode(['exito' => false, 'error' => 'Acción PUT no soportada']);
         }
         break;
 
     case 'DELETE':
         $input = json_decode(file_get_contents("php://input"), true);
         if ($input && isset($input['accion']) && $input['accion'] === 'eliminar') {
-            $_POST = $input;
-            require __DIR__ . '/../controlador/CargadorControlador.php';
+            $id = $input['id'] ?? null;
+            $res = eliminarCargador($conn, $id);
+            echo json_encode(['exito' => $res]);
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción DELETE no soportada']);
         }
