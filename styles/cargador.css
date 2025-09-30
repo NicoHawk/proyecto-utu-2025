@@ -31,30 +31,6 @@ body {
     padding: 0;
 }
 
-.btn-cerrar-sesion {
-    position: fixed;
-    top: 32px;
-    right: 48px;
-    background: linear-gradient(90deg, #1976d2 60%, #26c6da 100%);
-    color: #fff;
-    border: none;
-    border-radius: 7px;
-    padding: 10px 24px;
-    font-size: 1em;
-    cursor: pointer;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-    transition: background 0.3s, transform 0.1s;
-    z-index: 100;
-}
-.btn-cerrar-sesion:hover {
-    background: linear-gradient(90deg, #004d40 60%, #0288d1 100%);
-    transform: translateY(-2px) scale(1.04);
-}
-.btn-cerrar-sesion:active {
-    transform: scale(0.98);
-}
-
 .container {
     max-width: 500px;
     margin: 40px auto;
@@ -97,7 +73,6 @@ p {
 
 @media (max-width: 800px) {
     .container { padding: 12px 2vw; }
-    .btn-cerrar-sesion { right: 12px; top: 12px; }
 }
 
 .btn-editar, .btn-guardar, .btn-cancelar, .btn-eliminar, .btn-ver-mapa {
@@ -145,4 +120,96 @@ p {
 }
 .mensaje.exito { background: #c8e6c9; color: #256029; }
 .mensaje.error { background: #ffcdd2; color: #b71c1c; }
+
+/* Menú usuario arriba a la derecha */
+.usuario-menu {
+    position: fixed;
+    top: 18px;
+    right: 24px;
+    z-index: 200;
+    font-family: 'Montserrat', Arial, sans-serif;
+}
+
+.usuario-trigger {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 24px;
+    padding: 4px 12px 4px 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    cursor: pointer;
+    transition: background 0.2s;
+    gap: 6px;
+}
+
+.usuario-trigger:hover {
+    background: #e0f7fa;
+}
+
+.icono-usuario {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e0f7fa;
+    margin-right: 4px;
+}
+
+.saludo {
+    color: #1976d2;
+    font-weight: 600;
+    font-size: 1em;
+    margin-right: 4px;
+}
+
+.flecha {
+    font-size: 1em;
+    color: #1976d2;
+}
+
+.usuario-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 110%;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    min-width: 140px;
+    padding: 6px 0;
+    flex-direction: column;
+    gap: 0;
+}
+
+.usuario-dropdown a {
+    display: block;
+    padding: 8px 16px;
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+    font-size: 0.98em;
+}
+
+.usuario-dropdown a:hover {
+    background: #e0f7fa;
+    color: #004d40;
+}
+
+.usuario-menu.activo .usuario-dropdown {
+    display: flex;
+}
+
+@media (max-width: 600px) {
+    .usuario-menu {
+        top: 8px;
+        right: 8px;
+    }
+    .icono-usuario {
+        width: 22px;
+        height: 22px;
+    }
+    .usuario-trigger {
+        padding: 2px 8px 2px 2px;
+    }
+}
 

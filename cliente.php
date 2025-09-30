@@ -16,7 +16,17 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
 </head>
 
 <body>
-    <button class="btn-cerrar-sesion" onclick="window.location.href='logout.php'">Cerrar sesión</button>
+    <div class="usuario-menu">
+        <div class="usuario-trigger">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Usuario" class="icono-usuario">
+            <span class="saludo">Hola, <?php echo htmlspecialchars($_SESSION['usuario']); ?></span>
+            <span class="flecha">&#9660;</span>
+        </div>
+        <div class="usuario-dropdown">
+            <a href="#" id="editarPerfil">Editar perfil</a>
+            <a href="logout.php">Cerrar sesión</a>
+        </div>
+    </div>
     <div class="container">
         <h1>Bienvenido</h1>
         <p>Has iniciado sesión como cliente.<br>¡Disfruta de tu experiencia!</p>
@@ -277,6 +287,18 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
 
         // Cargar listado al iniciar
         window.onload = cargarListado;
+
+        document.querySelector('.usuario-trigger').addEventListener('click', function(e) {
+    e.stopPropagation();
+    document.querySelector('.usuario-menu').classList.toggle('activo');
+});
+document.addEventListener('click', function() {
+    document.querySelector('.usuario-menu').classList.remove('activo');
+});
+document.getElementById('editarPerfil').addEventListener('click', function(e) {
+    e.preventDefault();
+    alert('Funcionalidad de editar perfil próximamente.');
+});
     </script>
 </body>
 

@@ -14,8 +14,18 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
     <link rel="stylesheet" href="styles/cargador.css">
 </head>
 <body>
+    <div class="usuario-menu">
+        <div class="usuario-trigger">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Usuario" class="icono-usuario">
+            <span class="saludo">Hola, <?php echo htmlspecialchars($_SESSION['usuario']); ?></span>
+            <span class="flecha">&#9660;</span>
+        </div>
+        <div class="usuario-dropdown">
+            <a href="#" id="editarPerfil">Editar perfil</a>
+            <a href="logout.php">Cerrar sesión</a>
+        </div>
+    </div>
     <div class="container">
-        <button class="btn-cerrar-sesion" onclick="window.location.href='logout.php'">Cerrar sesión</button>
         <h1>Panel de Cargador</h1>
         <p>Has iniciado sesión como usuario de tipo <b>cargador</b>.<br>Aquí podrás gestionar los puntos de carga.</p>
         <h2 style="margin-bottom: 10px; color:#1976d2; text-align:center;">Mapa de cargadores</h2>
@@ -215,6 +225,43 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
             .catch(() => window.mostrarMensaje("Error de conexión al eliminar el cargador.", 'error'));
         }
     }
+
+    // Menú desplegable usuario
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggle = document.getElementById('menuToggle');
+        const menu = document.getElementById('menuList');
+        if(toggle && menu){
+            toggle.addEventListener('click', function(e){
+                e.stopPropagation();
+                menu.classList.toggle('show');
+                this.setAttribute('aria-expanded', menu.classList.contains('show'));
+            });
+            document.addEventListener('click', function(){
+                menu.classList.remove('show');
+                toggle.setAttribute('aria-expanded', 'false');
+            });
+            document.addEventListener('keydown', function(e){
+                if(e.key === 'Escape'){
+                    menu.classList.remove('show');
+                    toggle.setAttribute('aria-expanded', 'false');
+                    toggle.focus();
+                }
+            });
+        }
+    });
+
+    // Menú usuario con icono y saludo
+    document.querySelector('.usuario-trigger').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.querySelector('.usuario-menu').classList.toggle('activo');
+    });
+    document.addEventListener('click', function() {
+        document.querySelector('.usuario-menu').classList.remove('activo');
+    });
+    document.getElementById('editarPerfil').addEventListener('click', function(e) {
+        e.preventDefault();
+        alert('Funcionalidad de editar perfil próximamente.');
+    });
     </script>
 </body>
 </html>

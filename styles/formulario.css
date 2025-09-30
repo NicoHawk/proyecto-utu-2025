@@ -178,3 +178,209 @@ li button {
         width: 100%;
     }
 }
+/* --- Dashboard: Pestañas y menú usuario --- */
+.tabs-admin {
+    display: flex;
+    gap: 8px;
+    margin: 90px auto 24px auto;
+    justify-content: center;
+}
+.tab-btn {
+    background: #e0f2f1;
+    border: none;
+    border-radius: 8px 8px 0 0;
+    padding: 16px 48px;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #1976d2;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    outline: none;
+}
+.tab-btn.active, .tab-btn:hover {
+    background: #1976d2;
+    color: #fff;
+}
+.tab-content {
+    background: #fff;
+    border-radius: 0 0 18px 18px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
+    padding: 32px 24px 24px 24px;
+    max-width: 950px;
+    margin: 0 auto 32px auto;
+    min-height: 350px;
+    animation: fadeIn 0.7s;
+}
+@media (max-width: 900px) {
+    .tab-content {
+        padding: 16px 4vw 16px 4vw;
+    }
+    .tabs-admin {
+        flex-direction: column;
+        gap: 0;
+    }
+    .tab-btn {
+        width: 100%;
+        border-radius: 8px 8px 0 0;
+    }
+}
+
+/* Menú usuario arriba a la derecha */
+.usuario-menu {
+    position: fixed;
+    top: 18px;
+    right: 24px;
+    z-index: 200;
+    font-family: 'Montserrat', Arial, sans-serif;
+}
+.usuario-trigger {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 24px;
+    padding: 4px 12px 4px 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    cursor: pointer;
+    transition: background 0.2s;
+    gap: 6px;
+}
+.usuario-trigger:hover {
+    background: #e0f7fa;
+}
+.icono-usuario {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e0f7fa;
+    margin-right: 4px;
+}
+.saludo {
+    color: #1976d2;
+    font-weight: 600;
+    font-size: 1em;
+    margin-right: 4px;
+}
+.flecha {
+    font-size: 1em;
+    color: #1976d2;
+}
+.usuario-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 110%;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    min-width: 140px;
+    padding: 6px 0;
+    flex-direction: column;
+    gap: 0;
+}
+.usuario-dropdown a {
+    display: block;
+    padding: 8px 16px;
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+    font-size: 0.98em;
+}
+.usuario-dropdown a:hover {
+    background: #e0f7fa;
+    color: #004d40;
+}
+.usuario-menu.activo .usuario-dropdown {
+    display: flex;
+}
+
+/* Sidebar dashboard */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 80px;
+    height: 100vh;
+    background: #222b3a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 28px;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.10);
+    z-index: 100;
+}
+.sidebar-logo img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    margin-bottom: 32px;
+    border: 2px solid #fff;
+    background: #fff;
+}
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+.sidebar-item {
+    width: 100%;
+    padding: 18px 0 14px 0;
+    color: #b0bec5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background 0.18s, color 0.18s;
+    border-left: 4px solid transparent;
+    position: relative;
+}
+.sidebar-item.active, .sidebar-item:hover {
+    background: #1976d2;
+    color: #fff;
+    border-left: 4px solid #43a047;
+}
+.sidebar-icon {
+    font-size: 1.7em;
+    margin-bottom: 4px;
+}
+.sidebar-text {
+    font-size: 0.98em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+.main-panel {
+    margin-left: 100px;
+    margin-top: 36px;
+    padding: 36px 32px 32px 32px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.13), 0 0 0 4px #222b3a;
+    min-height: 80vh;
+    max-width: 1100px;
+    width: calc(100vw - 160px);
+    position: relative;
+    animation: fadeIn 0.7s;
+}
+@media (max-width: 900px) {
+    .main-panel {
+        margin-left: 80px;
+        padding: 18px 4vw 18px 4vw;
+        min-width: 0;
+        width: 100vw;
+    }
+    .sidebar {
+        width: 60px;
+    }
+    .sidebar-logo img {
+        width: 32px;
+        height: 32px;
+    }
+    .sidebar-icon {
+        font-size: 1.3em;
+    }
+    .sidebar-text {
+        font-size: 0.85em;
+    }
+}
