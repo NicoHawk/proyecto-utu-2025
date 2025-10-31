@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once __DIR__ . '/../controlador/UsuarioControlador.php';
 
 header('Access-Control-Allow-Origin: *');
@@ -25,12 +26,29 @@ switch ($method) {
         if (isset($_POST['eliminar'])) {
             $nombre = $_POST['nombre'] ?? '';
             echo json_encode(eliminarUsuario($nombre));
+        } elseif (isset($_POST['modificar_perfil'])) {
+            $nombre = $_SESSION['usuario'] ?? '';
+            $nuevoNombre = $_POST['nuevoNombre'] ?? '';
+            $nuevoCorreo = $_POST['nuevoCorreo'] ?? '';
+            $nuevaPassword = $_POST['nuevaPassword'] ?? '';
+            $tipoUsuario = $_SESSION['tipo_usuario'] ?? 'cliente';
+            
+            // Llamar a modificarUsuario con los parámetros en el orden correcto
+            $resultado = modificarUsuario($nombre, $nuevoNombre, $nuevoCorreo, $tipoUsuario, $nuevaPassword);
+            
+            if ($resultado['success']) {
+                // Actualizar la sesión con los nuevos datos
+                $_SESSION['usuario'] = $nuevoNombre;
+                $_SESSION['correo'] = $nuevoCorreo;
+            }
+            echo json_encode($resultado);
         } elseif (isset($_POST['modificar'])) {
             $nombre = $_POST['nombre'] ?? '';
             $nuevoNombre = $_POST['nuevoNombre'] ?? '';
+            $nuevoCorreo = $_POST['nuevoCorreo'] ?? '';
             $nuevoTipoUsuario = $_POST['nuevoTipoUsuario'] ?? 'cliente';
             $nuevaPassword = $_POST['nuevaPassword'] ?? '';
-            echo json_encode(modificarUsuario($nombre, $nuevoNombre, $nuevoTipoUsuario, $nuevaPassword));
+            echo json_encode(modificarUsuario($nombre, $nuevoNombre, $nuevoCorreo, $nuevoTipoUsuario, $nuevaPassword));
         } else {
             echo json_encode(['error' => 'Acción POST no soportada']);
         }

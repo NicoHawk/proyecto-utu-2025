@@ -1,49 +1,48 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <title>Registro</title>
+    <title>Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/registro.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/index.css">
 </head>
-
 <body>
-    <button class="menu-btn" id="abrirMenu" title="Abrir menú" style="right:24px; left:auto;">&#9776;</button>
+    <button class="menu-btn" id="abrirMenu" title="Abrir menú">&#9776;</button>
     <div class="menu-lateral" id="menuLateral">
         <button class="cerrar-menu" id="cerrarMenu" title="Cerrar menú">&times;</button>
-        <a href="principal.html">Inicio</a>
+    <a href="principal.html">Inicio</a>
+    <a href="registro.html">Registrarse</a>
         <a href="#">Contacto</a>
     </div>
     <div class="menu-overlay" id="menuOverlay"></div>
     <div class="container">
-        <h1>Registro</h1>
-        <form id="registroForm">
-            <input type="text" id="usuario" name="usuario" placeholder="Usuario" required>
-            <input type="password" id="password" name="password" placeholder="Contraseña" required>
-            <button type="submit">Registrarse</button>
+        <h1>Iniciar Sesión</h1>
+        <form id="loginForm">
+            <input type="email" id="correo" name="correo" placeholder="Correo electrónico" required autocomplete="email">
+            <input type="password" id="password" name="password" placeholder="Contraseña" required autocomplete="current-password">
+            <button type="submit">Ingresar</button>
         </form>
-    <button class="login-btn azul" id="btn-login">Ir a Login</button>
+    <button class="register-btn" onclick="window.location.href='registro.html'">Registrarse</button>
         <div id="mensaje" class="mensaje"></div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const registroForm = document.getElementById('registroForm');
+            const loginForm = document.getElementById('loginForm');
             const mensajeDiv = document.getElementById('mensaje');
             mensajeDiv.style.display = 'none';
 
-            registroForm.addEventListener('submit', function(event) {
+            loginForm.addEventListener('submit', function(event) {
                 event.preventDefault();
 
-                const usuario = document.getElementById('usuario').value;
+                const correo = document.getElementById('correo').value;
                 const password = document.getElementById('password').value;
 
                 const formData = new FormData();
-                formData.append('username', usuario);
+                formData.append('accion', 'login');
+                formData.append('correo', correo);
                 formData.append('password', password);
-                // Por defecto, tipo_usuario será 'cliente' en el backend
-                fetch('api/registro.php', {
+
+                fetch('../api/login.php', {
                     method: 'POST',
                     body: formData
                 })
@@ -51,13 +50,19 @@
                 .then(data => {
                     mensajeDiv.style.display = 'block';
                     if (data.success) {
-                        mensajeDiv.textContent = data.mensaje || 'Registro exitoso. Ahora puedes iniciar sesión.';
+                        mensajeDiv.textContent = 'Ingreso exitoso. Redirigiendo...';
                         mensajeDiv.className = 'mensaje success';
                         setTimeout(() => {
-                            window.location.href = 'index.php';
-                        }, 1500);
+                            if (data.tipo_usuario === 'admin') {
+                                window.location.href = 'formulario.php';
+                            } else if (data.tipo_usuario === 'cliente') {
+                                window.location.href = 'cliente.php';
+                            } else if (data.tipo_usuario === 'cargador') {
+                                window.location.href = 'cargador.php';
+                            }
+                        }, 900);
                     } else {
-                        mensajeDiv.textContent = data.mensaje || 'Error en el registro.';
+                        mensajeDiv.textContent = data.mensaje;
                         mensajeDiv.className = 'mensaje error';
                     }
                 })
@@ -68,12 +73,7 @@
                 });
             });
 
-            // Botón para ir a login.html
-            document.getElementById("btn-login").onclick = function() {
-                window.location.href = "index.php";
-            };
-
-            // Animación de menú lateral (igual que index.html)
+            // Animación de menú lateral
             const abrirMenu = document.getElementById('abrirMenu');
             const cerrarMenu = document.getElementById('cerrarMenu');
             const menuLateral = document.getElementById('menuLateral');

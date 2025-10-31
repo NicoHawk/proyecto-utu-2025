@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `gestion_db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `gestion_db`;
--- MySQL dump 10.13  Distrib 8.0.42, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 9.3.0, for Win64 (x86_64)
 --
 -- Host: localhost    Database: gestion_db
 -- ------------------------------------------------------
--- Server version	8.0.42
+-- Server version	9.3.0
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -59,7 +59,7 @@ CREATE TABLE `cargadores` (
   `latitud` double NOT NULL,
   `longitud` double NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -68,7 +68,7 @@ CREATE TABLE `cargadores` (
 
 LOCK TABLES `cargadores` WRITE;
 /*!40000 ALTER TABLE `cargadores` DISABLE KEYS */;
-INSERT INTO `cargadores` VALUES (7,'cargador1',-34.722095966065034,-55.95642458084394),(8,'cargador2',-34.719191383596446,-55.95611852533028),(9,'cargador3',-34.716523765623585,-55.96308574843185),(10,'cargador4',-34.71936362174411,-55.95399421579049),(12,'cargador5',-34.7172251397432,-55.96615922468679),(13,'japon',36.149081435662275,139.05798532653375);
+INSERT INTO `cargadores` VALUES (7,'cargador1',-34.722095966065034,-55.95642458084394),(8,'cargador2',-34.719191383596446,-55.95611852533028),(9,'cargador3',-34.716523765623585,-55.96308574843185),(10,'cargador4',-34.71936362174411,-55.95399421579049),(12,'cargador5',-34.7172251397432,-55.96615922468679),(13,'japon',36.149081435662275,139.05798532653375),(14,'prueba',-34.72793715932392,-55.96821303710938),(17,'Argentina',-34.73977960001527,-58.51075742637981);
 /*!40000 ALTER TABLE `cargadores` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -81,6 +81,7 @@ DROP TABLE IF EXISTS `usuarios`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `usuarios` (
   `usuario` varchar(50) NOT NULL,
+  `correo` varchar(100) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `tipo_usuario` enum('admin','cliente','cargador') NOT NULL DEFAULT 'cliente',
   PRIMARY KEY (`usuario`)
@@ -93,7 +94,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES ('admin','$2y$10$E39mbImb/JbZf8iFce/aoejoBoIvrVi.M00jWWSLPZEd4ncmHC42O','admin'),('cargador','$2y$10$qvqnDkepLc0J65mFD1EKYesJdN5cv7OvV359OmFrOjwI7.Cw5bfWu','cargador'),('nico','$2y$10$mO5TnDsORUgv3coGzGCvyerHBYMUZtZCkyCEOVIAsu1KeNRUE0PWO','cliente'),('usuario','$2y$10$kdjWM8vxj1N/hjpx2BiDU.JHncFe0SSz3aTge9SpKFakyi0wytJra','cliente');
+INSERT INTO `usuarios` VALUES ('admin','admin@gmail.com','$2y$10$E39mbImb/JbZf8iFce/aoejoBoIvrVi.M00jWWSLPZEd4ncmHC42O','admin'),('cargador','cargador@gmail.com','$2y$10$qvqnDkepLc0J65mFD1EKYesJdN5cv7OvV359OmFrOjwI7.Cw5bfWu','cargador'),('nico','nico@gmail.com','$2y$10$mO5TnDsORUgv3coGzGCvyerHBYMUZtZCkyCEOVIAsu1KeNRUE0PWO','cliente'),('usuario','usuario@gmail.com','$2y$10$6rOwqC73plBAh.oPEbmxYuhSV0zcE2giqCwpB.FVMh2UuqY5wLxsu','cliente');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -135,4 +136,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-09-18 17:31:53
+-- Dump completed on 2025-10-31  6:33:24

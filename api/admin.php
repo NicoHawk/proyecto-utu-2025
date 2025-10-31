@@ -41,9 +41,10 @@ switch ($method) {
         } elseif (isset($_POST['modificar_usuario'])) {
             $nombre = $_POST['nombre'] ?? '';
             $nuevoNombre = $_POST['nuevoNombre'] ?? '';
+            $nuevoCorreo = $_POST['nuevoCorreo'] ?? '';
             $nuevoTipoUsuario = $_POST['nuevoTipoUsuario'] ?? 'cliente';
             $nuevaPassword = $_POST['nuevaPassword'] ?? '';
-            echo json_encode(modificarUsuario($nombre, $nuevoNombre, $nuevoTipoUsuario, $nuevaPassword));
+            echo json_encode(modificarUsuario($nombre, $nuevoNombre, $nuevoCorreo, $nuevoTipoUsuario, $nuevaPassword));
         // CARGADORES
         } elseif (isset($_POST['agregar_cargador'])) {
             $nombre = $_POST['nombre'] ?? '';

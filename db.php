@@ -1,5 +1,5 @@
 <?php
-// filepath: c:\xampp\htdocs\proyecto_new\db.php
+// filepath: c:\xampp\htdocs\proyecto_new1\db.php
 function conectar() {
     try {
         $conexion = new PDO('mysql:host=localhost;dbname=gestion_db', 'root', 'root');

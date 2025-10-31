@@ -51,7 +51,7 @@ form {
     width: 100%;
 }
 
-input[type="text"], input[type="password"] {
+input[type="text"], input[type="password"], input[type="email"] {
     padding: 12px 14px;
     border: 1.5px solid #00796b;
     border-radius: 7px;
@@ -62,7 +62,7 @@ input[type="text"], input[type="password"] {
     box-sizing: border-box;
 }
 
-input[type="text"]:focus, input[type="password"]:focus {
+input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
     border: 2px solid #0288d1;
     outline: none;
 }
@@ -209,7 +209,7 @@ button:hover, .register-btn:hover {
     form {
         gap: 12px;
     }
-    input[type="text"], input[type="password"] {
+    input[type="text"], input[type="password"], input[type="email"] {
         width: 100%;
     }
     .menu-lateral {

@@ -15,18 +15,18 @@ class Usuario {
         $this->tabla = $tabla;
     }
 
-    // Registrar usuario (usuario, password, tipo_usuario)
-    public function insertar($usuario, $password, $tipo_usuario) {
-        $sql = "INSERT INTO {$this->tabla} (usuario, password, tipo_usuario) VALUES (?, ?, ?)";
+    // Registrar usuario (usuario, correo, password, tipo_usuario)
+    public function insertar($usuario, $correo, $password, $tipo_usuario) {
+        $sql = "INSERT INTO {$this->tabla} (usuario, correo, password, tipo_usuario) VALUES (?, ?, ?, ?)";
         $stmt = $this->conexion->prepare($sql);
-        return $stmt->execute([$usuario, $password, $tipo_usuario]);
+        return $stmt->execute([$usuario, $correo, $password, $tipo_usuario]);
     }
 
-    // Verificar credenciales para login
-    public function verificarCredenciales($usuario, $password) {
-        $sql = "SELECT * FROM {$this->tabla} WHERE usuario = ?";
+    // Verificar credenciales para login (por correo)
+    public function verificarCredenciales($correo, $password) {
+        $sql = "SELECT * FROM {$this->tabla} WHERE correo = ?";
         $stmt = $this->conexion->prepare($sql);
-        $stmt->execute([$usuario]);
+        $stmt->execute([$correo]);
         $usuarioData = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($usuarioData && password_verify($password, $usuarioData['password'])) {
@@ -52,13 +52,22 @@ class Usuario {
         return $stmt->execute([$usuario]);
     }
 
-    // Modificar nombre de usuario y tipo_usuario
-    public function modificar($usuario, $nuevoUsuario, $nuevoTipoUsuario = null, $nuevaPassword = null) {
-        if ($nuevaPassword) {
+    // Modificar nombre de usuario, correo y tipo_usuario
+    public function modificar($usuario, $nuevoUsuario, $nuevoCorreo = null, $nuevoTipoUsuario = null, $nuevaPassword = null) {
+        if ($nuevaPassword && $nuevoCorreo) {
+            $passwordHash = password_hash($nuevaPassword, PASSWORD_BCRYPT);
+            $sql = "UPDATE {$this->tabla} SET usuario = ?, correo = ?, tipo_usuario = ?, password = ? WHERE usuario = ?";
+            $stmt = $this->conexion->prepare($sql);
+            return $stmt->execute([$nuevoUsuario, $nuevoCorreo, $nuevoTipoUsuario, $passwordHash, $usuario]);
+        } elseif ($nuevaPassword) {
             $passwordHash = password_hash($nuevaPassword, PASSWORD_BCRYPT);
             $sql = "UPDATE {$this->tabla} SET usuario = ?, tipo_usuario = ?, password = ? WHERE usuario = ?";
             $stmt = $this->conexion->prepare($sql);
             return $stmt->execute([$nuevoUsuario, $nuevoTipoUsuario, $passwordHash, $usuario]);
+        } elseif ($nuevoCorreo) {
+            $sql = "UPDATE {$this->tabla} SET usuario = ?, correo = ?, tipo_usuario = ? WHERE usuario = ?";
+            $stmt = $this->conexion->prepare($sql);
+            return $stmt->execute([$nuevoUsuario, $nuevoCorreo, $nuevoTipoUsuario, $usuario]);
         } else {
             $sql = "UPDATE {$this->tabla} SET usuario = ?, tipo_usuario = ? WHERE usuario = ?";
             $stmt = $this->conexion->prepare($sql);
@@ -68,7 +77,7 @@ class Usuario {
 
     // Listar todos los usuarios
     public function listar() {
-        $stmt = $this->conexion->query("SELECT usuario, tipo_usuario FROM {$this->tabla}");
+        $stmt = $this->conexion->query("SELECT usuario, correo, tipo_usuario FROM {$this->tabla}");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

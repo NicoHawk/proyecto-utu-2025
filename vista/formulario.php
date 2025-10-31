@@ -15,7 +15,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
     <meta charset="UTF-8">
     <title>Panel de Administración</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/formulario.css">
+    <link rel="stylesheet" href="../styles/formulario.css">
 </head>
 <body>
     <!-- Sidebar -->
@@ -140,7 +140,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         });
 
         // Cargar cargadores guardados
-        fetch('api/cargadores.php')
+    fetch('../api/cargadores.php')
             .then(res => res.json())
             .then(cargadores => {
                 mostrarListaCargadores(cargadores);
@@ -229,7 +229,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
             if (ubicacionTemporal) {
                 const nombre = document.getElementById("nombreCargador").value;
                 // Guardar en la base de datos
-                fetch('api/admin.php', {
+                fetch('../api/admin.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: `agregar_cargador=1&nombre=${encodeURIComponent(nombre)}&latitud=${encodeURIComponent(ubicacionTemporal.lat())}&longitud=${encodeURIComponent(ubicacionTemporal.lng())}`
@@ -238,7 +238,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                 .then(res => {
                     if(res.exito){
                         // Recargar lista y marcadores
-                        fetch('api/cargadores.php')
+                        fetch('../api/cargadores.php')
                             .then(res => res.json())
                             .then(cargadores => {
                                 mostrarListaCargadores(cargadores);
@@ -279,7 +279,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         const nombre = document.getElementById("nombre").value;
         const password = document.getElementById("password").value;
         const tipo_usuario = document.getElementById("tipo_usuario").value;
-        fetch("api/admin.php", {
+    fetch("../api/admin.php", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: `agregar_usuario=1&username=${encodeURIComponent(nombre)}&password=${encodeURIComponent(password)}&tipo_usuario=${encodeURIComponent(tipo_usuario)}`
@@ -298,7 +298,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
     document.getElementById("btn-listar").addEventListener("click", listar);
 
     function listar() {
-        fetch("api/admin.php?listar_usuarios=1")
+    fetch("../api/admin.php?listar_usuarios=1")
             .then(res => res.json())
             .then(data => {
                 let html = "";
@@ -307,12 +307,15 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                         <li id="usuario-${usuario.usuario}">
                             <div class="usuario-info">
                                 <span id="nombre-${usuario.usuario}"><b>Usuario:</b> ${usuario.usuario}</span>
+                                <span id="correo-${usuario.usuario}"><b>Correo:</b> ${usuario.correo}</span>
                                 <span id="tipo-${usuario.usuario}"><b>Tipo:</b> ${usuario.tipo_usuario}</span>
                                 <input type="text" id="input-${usuario.usuario}" value="${usuario.usuario}" style="display:none; margin-bottom:4px;">
+                                <input type="email" id="input-correo-${usuario.usuario}" value="${usuario.correo}" style="display:none; margin-bottom:4px;">
                                 <input type="password" id="input-pass-${usuario.usuario}" class="input-password" placeholder="Nueva contraseña" style="display:none; margin-bottom:4px;">
                                 <select id="input-tipo-${usuario.usuario}" style="display:none; margin-bottom:4px;">
                                     <option value="cliente" ${usuario.tipo_usuario === 'cliente' ? 'selected' : ''}>Cliente</option>
                                     <option value="admin" ${usuario.tipo_usuario === 'admin' ? 'selected' : ''}>Admin</option>
+                                    <option value="cargador" ${usuario.tipo_usuario === 'cargador' ? 'selected' : ''}>Cargador</option>
                                 </select>
                             </div>
                             <button class="btn-editar" onclick="editar('${usuario.usuario}')">Editar</button>
@@ -326,8 +329,10 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
 
     window.editar = function (nombre) {
         document.getElementById(`nombre-${nombre}`).style.display = 'none';
+        document.getElementById(`correo-${nombre}`).style.display = 'none';
         document.getElementById(`tipo-${nombre}`).style.display = 'none';
         document.getElementById(`input-${nombre}`).style.display = 'inline-block';
+        document.getElementById(`input-correo-${nombre}`).style.display = 'inline-block';
         document.getElementById(`input-pass-${nombre}`).style.display = 'inline-block';
         document.getElementById(`input-tipo-${nombre}`).style.display = 'inline-block';
         document.getElementById(`guardar-${nombre}`).style.display = 'inline-block';
@@ -335,18 +340,19 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
 
     window.guardar = function (nombre) {
         const nuevoNombre = document.getElementById(`input-${nombre}`).value;
+        const nuevoCorreo = document.getElementById(`input-correo-${nombre}`).value;
         const nuevaPassword = document.getElementById(`input-pass-${nombre}`).value;
         const nuevoTipoUsuario = document.getElementById(`input-tipo-${nombre}`).value;
-        let body = `accion=modificar&nombre=${encodeURIComponent(nombre)}&nuevoNombre=${encodeURIComponent(nuevoNombre)}&nuevoTipoUsuario=${encodeURIComponent(nuevoTipoUsuario)}`;
+        let body = `modificar_usuario=1&nombre=${encodeURIComponent(nombre)}&nuevoNombre=${encodeURIComponent(nuevoNombre)}&nuevoCorreo=${encodeURIComponent(nuevoCorreo)}&nuevoTipoUsuario=${encodeURIComponent(nuevoTipoUsuario)}`;
         if (nuevaPassword) {
             body += `&nuevaPassword=${encodeURIComponent(nuevaPassword)}`;
         }
-        fetch("api/admin.php", {
+    fetch("../api/admin.php", {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
             },
-            body: `modificar_usuario=1&nombre=${encodeURIComponent(nombre)}&nuevoNombre=${encodeURIComponent(nuevoNombre)}&nuevoTipoUsuario=${encodeURIComponent(nuevoTipoUsuario)}${nuevaPassword ? `&nuevaPassword=${encodeURIComponent(nuevaPassword)}` : ''}`
+            body: body
         })
             .then(res => res.json())
             .then(data => {
@@ -357,7 +363,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
 
     window.eliminar = function (nombre) {
         if (confirm("¿Eliminar este usuario?")) {
-            fetch("api/admin.php", {
+            fetch("../api/admin.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: `eliminar_usuario=1&nombre=${encodeURIComponent(nombre)}`
@@ -373,7 +379,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
     // Función para eliminar cargadores
     window.eliminarCargador = function(id) {
         if (confirm("¿Eliminar este cargador?")) {
-            fetch('api/admin.php', {
+            fetch('../api/admin.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `eliminar_cargador=1&id=${encodeURIComponent(id)}`
@@ -383,7 +389,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                 if (res.exito) {
                     alert(res.mensaje || "Cargador eliminado");
                     // Recargar lista y marcadores
-                    fetch('api/cargadores.php')
+                    fetch('../api/cargadores.php')
                         .then(res => res.json())
                         .then(cargadores => {
                             mostrarListaCargadores(cargadores);
@@ -411,7 +417,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
 
     // Botón para cerrar sesión
     document.getElementById("btn-cerrar-sesion").onclick = function () {
-        window.location.href = "logout.php";
+    window.location.href = "logout.php";
     };
     </script>
 </body>

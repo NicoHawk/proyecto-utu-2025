@@ -12,9 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $usuario = $_POST['usuario'] ?? '';
+    $correo = $_POST['correo'] ?? '';
     $password = $_POST['password'] ?? '';
-    $resultado = loginUsuario($usuario, $password);
+    $resultado = loginUsuario($correo, $password);
     echo json_encode($resultado);
     exit;
 }

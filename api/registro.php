@@ -13,9 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
+    $correo = $_POST['correo'] ?? '';
     $password = $_POST['password'] ?? '';
     $tipo_usuario = $_POST['tipo_usuario'] ?? 'cliente';
-    $resultado = registrarUsuario($username, $password, $tipo_usuario);
+    $resultado = registrarUsuario($username, $correo, $password, $tipo_usuario);
     echo json_encode($resultado);
     exit;
 }

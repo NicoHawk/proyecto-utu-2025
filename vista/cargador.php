@@ -11,7 +11,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
     <meta charset="UTF-8">
     <title>Panel de Cargador</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/cargador.css">
+    <link rel="stylesheet" href="../styles/cargador.css">
 </head>
 <body>
     <div class="usuario-menu">
@@ -37,19 +37,20 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
         </form>
         <div id="listaCargadores"></div>
     </div>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcstapgk7BG-qavJNSKsSWIeYCv_h0wXU&callback=initMap" async defer></script>
     <script>
     let map;
     let marcadores = {};
     let ubicacionTemporal = null;
 
-    function initMap() {
+    // Definir initMap globalmente ANTES de cargar el script de Google Maps
+    window.initMap = function() {
+        console.log('Inicializando mapa...');
         const centro = { lat: -34.7176, lng: -55.9586 };
         map = new google.maps.Map(document.getElementById("map"), {
             zoom: 13,
             center: centro,
         });
-        fetch('api/cargadores.php?accion=listar', {
+    fetch('../api/cargadores.php?accion=listar', {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         })
@@ -140,7 +141,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
             e.preventDefault();
             if (ubicacionTemporal) {
                 const nombre = document.getElementById("nombreCargador").value;
-                fetch('api/cargadores.php', {
+                fetch('../api/cargadores.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -195,7 +196,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
 
     window.eliminarCargador = function(id) {
         if (confirm("¿Eliminar este cargador?")) {
-            fetch('api/cargadores.php', {
+            fetch('../api/cargadores.php', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ accion: 'eliminar', id: id })
@@ -205,7 +206,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
                 if (res.exito) {
                     window.mostrarMensaje(res.mensaje || "Cargador eliminado", 'exito');
                     // Actualizar lista y mapa instantáneamente
-                    fetch('api/cargadores.php?accion=listar', {
+                    fetch('../api/cargadores.php?accion=listar', {
                         method: 'GET',
                         headers: { 'Accept': 'application/json' }
                     })
@@ -263,5 +264,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
         alert('Funcionalidad de editar perfil próximamente.');
     });
     </script>
+    <!-- Cargar Google Maps después de definir initMap -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcstapgk7BG-qavJNSKsSWIeYCv_h0wXU&callback=initMap" async defer></script>
 </body>
 </html>

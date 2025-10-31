@@ -8,11 +8,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $usuarioModel = new Usuario();
 
-function loginUsuario($usuario, $password) {
+function loginUsuario($correo, $password) {
     global $usuarioModel;
-    $usuarioData = $usuarioModel->verificarCredenciales($usuario, $password);
+    $usuarioData = $usuarioModel->verificarCredenciales($correo, $password);
     if ($usuarioData) {
-        $_SESSION['usuario'] = $usuario;
+        $_SESSION['usuario'] = $usuarioData['usuario'];
+        $_SESSION['correo'] = $usuarioData['correo'];
         $_SESSION['tipo_usuario'] = $usuarioData['tipo_usuario'];
         return [
             'success' => true,
@@ -23,15 +24,15 @@ function loginUsuario($usuario, $password) {
         return [
             'success' => false,
             'tipo_usuario' => null,
-            'mensaje' => 'Usuario o contraseña incorrectos'
+            'mensaje' => 'Correo o contraseña incorrectos'
         ];
     }
 }
 
-function registrarUsuario($username, $password, $tipo_usuario) {
+function registrarUsuario($username, $correo, $password, $tipo_usuario) {
     global $usuarioModel;
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
-    if ($usuarioModel->insertar($username, $passwordHash, $tipo_usuario)) {
+    if ($usuarioModel->insertar($username, $correo, $passwordHash, $tipo_usuario)) {
         return [
             'success' => true,
             'mensaje' => 'Usuario registrado con éxito'
@@ -64,12 +65,16 @@ function eliminarUsuario($nombre) {
     }
 }
 
-function modificarUsuario($nombre, $nuevoNombre, $nuevoTipoUsuario, $nuevaPassword = '') {
+function modificarUsuario($nombre, $nuevoNombre, $nuevoCorreo = '', $nuevoTipoUsuario, $nuevaPassword = '') {
     global $usuarioModel;
-    if ($nuevaPassword) {
-        $ok = $usuarioModel->modificar($nombre, $nuevoNombre, $nuevoTipoUsuario, $nuevaPassword);
+    if ($nuevaPassword && $nuevoCorreo) {
+        $ok = $usuarioModel->modificar($nombre, $nuevoNombre, $nuevoCorreo, $nuevoTipoUsuario, $nuevaPassword);
+    } elseif ($nuevaPassword) {
+        $ok = $usuarioModel->modificar($nombre, $nuevoNombre, null, $nuevoTipoUsuario, $nuevaPassword);
+    } elseif ($nuevoCorreo) {
+        $ok = $usuarioModel->modificar($nombre, $nuevoNombre, $nuevoCorreo, $nuevoTipoUsuario);
     } else {
-        $ok = $usuarioModel->modificar($nombre, $nuevoNombre, $nuevoTipoUsuario);
+        $ok = $usuarioModel->modificar($nombre, $nuevoNombre, null, $nuevoTipoUsuario);
     }
     if ($ok) {
         return [

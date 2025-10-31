@@ -12,7 +12,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bienvenido</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/cliente.css">
+    <link rel="stylesheet" href="../styles/cliente.css">
 </head>
 
 <body>
@@ -30,6 +30,27 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
     <div class="container">
         <h1>Bienvenido</h1>
         <p>Has iniciado sesión como cliente.<br>¡Disfruta de tu experiencia!</p>
+
+        <!-- Modal para editar perfil -->
+        <div id="modalEditarPerfil" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Editar Perfil</h2>
+                <form id="formEditarPerfil">
+                    <label for="editUsuario">Nombre de Usuario:</label>
+                    <input type="text" id="editUsuario" name="editUsuario" value="<?php echo htmlspecialchars($_SESSION['usuario']); ?>" required>
+
+                    <label for="editCorreo">Correo Electrónico:</label>
+                    <input type="email" id="editCorreo" name="editCorreo" value="<?php echo htmlspecialchars($_SESSION['correo'] ?? ''); ?>" required>
+
+                    <label for="editPassword">Nueva Contraseña (dejar en blanco para mantener la actual):</label>
+                    <input type="password" id="editPassword" name="editPassword" placeholder="Nueva contraseña">
+
+                    <button type="submit" style="margin-top:24px;">Guardar Cambios</button>
+                </form>
+                <div id="mensajePerfil" style="margin-top:20px;"></div>
+            </div>
+        </div>
 
         <!-- Formulario para agregar un auto -->
         <h2 style="margin-top:40px;">Agregar Auto</h2>
@@ -122,7 +143,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
 
         // Función para cargar el listado de autos usando la API (ejemplo de integración API)
         function cargarListado() {
-            fetch('api/cliente.php?listar=1')
+            fetch('../api/cliente.php?listar=1')
             .then(res => res.json())
             .then(autos => {
                 // Si la API devuelve autos, mostrar tabla, si no, mostrar mensaje
@@ -158,7 +179,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
             const formData = new FormData(this);
             // Aquí deberías tener un endpoint en la API para agregar autos, por ejemplo: api/auto.php
             // Este ejemplo solo muestra cómo sería la llamada:
-            fetch('api/auto.php', {
+            fetch('../api/auto.php', {
                 method: 'POST',
                 body: new URLSearchParams({
                     accion: 'agregar',
@@ -212,7 +233,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
                     autonomia: inputs[3].value,
                     anio: inputs[4].value
                 };
-                fetch('api/auto.php', {
+                fetch('../api/auto.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(datos)
@@ -230,7 +251,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
             if (e.target.classList.contains('btn-eliminar')) {
                 const tr = e.target.closest('tr');
                 const id = tr.getAttribute('data-id');
-                fetch('api/auto.php', {
+                fetch('../api/auto.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ accion: 'eliminar', id: id })
@@ -252,7 +273,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('accion', 'agregar');
-            fetch('controlador/ViajeControlador.php', {
+            fetch('../controlador/ViajeControlador.php', {
                 method: 'POST',
                 body: formData
             })
@@ -265,7 +286,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
         });
 
         function listarViajes() {
-            fetch('controlador/ViajeControlador.php?accion=listar')
+            fetch('../controlador/ViajeControlador.php?accion=listar')
                 .then(res => res.json())
                 .then(data => {
                     const tbody = document.querySelector('#tablaViajes tbody');
@@ -295,9 +316,75 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
 document.addEventListener('click', function() {
     document.querySelector('.usuario-menu').classList.remove('activo');
 });
+
+// Modal para editar perfil
+const modal = document.getElementById('modalEditarPerfil');
+const closeModal = document.querySelector('.close');
+
 document.getElementById('editarPerfil').addEventListener('click', function(e) {
     e.preventDefault();
-    alert('Funcionalidad de editar perfil próximamente.');
+    modal.style.display = 'block';
+    document.querySelector('.usuario-menu').classList.remove('activo');
+});
+
+closeModal.addEventListener('click', function() {
+    modal.style.display = 'none';
+});
+
+window.addEventListener('click', function(e) {
+    if (e.target == modal) {
+        modal.style.display = 'none';
+    }
+});
+
+// Formulario de editar perfil
+document.getElementById('formEditarPerfil').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('modificar_perfil', '1');
+    formData.append('nuevoNombre', document.getElementById('editUsuario').value);
+    formData.append('nuevoCorreo', document.getElementById('editCorreo').value);
+    const password = document.getElementById('editPassword').value;
+    if (password) {
+        formData.append('nuevaPassword', password);
+    }
+
+    fetch('../api/cliente.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Error HTTP: ' + res.status);
+        }
+        return res.json();
+    })
+    .then(data => {
+        console.log('Respuesta del servidor:', data);
+        const mensajeDiv = document.getElementById('mensajePerfil');
+        if (data.success) {
+            mensajeDiv.innerHTML = data.mensaje;
+            mensajeDiv.className = 'mensaje exito';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // Actualizar el saludo con el nuevo nombre
+                document.querySelector('.saludo').textContent = 'Hola, ' + document.getElementById('editUsuario').value;
+                mensajeDiv.innerHTML = '';
+                mensajeDiv.className = '';
+                // Limpiar el campo de contraseña
+                document.getElementById('editPassword').value = '';
+            }, 2000);
+        } else {
+            mensajeDiv.innerHTML = data.mensaje || 'Error al actualizar el perfil';
+            mensajeDiv.className = 'mensaje error';
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        const mensajeDiv = document.getElementById('mensajePerfil');
+        mensajeDiv.innerHTML = 'Error de conexión: ' + error.message;
+        mensajeDiv.className = 'mensaje error';
+    });
 });
     </script>
 </body>
