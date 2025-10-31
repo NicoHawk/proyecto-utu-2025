@@ -217,7 +217,7 @@ ALTER TABLE usuarios ADD COLUMN correo VARCHAR(100) NOT NULL UNIQUE;
 
 Para reportar bugs o sugerir mejoras, contactar al equipo de desarrollo.
 
-**Desarrollado por:** Equipo UTU 2025  
+**Desarrollado por:** ShonosTech
 **Fecha de Release:** 31 de Octubre de 2025  
 **Versión Anterior:** 1.2.0  
 **Versión Actual:** 1.3.0
