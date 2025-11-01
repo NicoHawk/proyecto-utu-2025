@@ -1,5 +1,163 @@
 # 📋 Changelog - Sistema de Gestión de Autos Eléctricos
 
+## Versión 1.4.0 - 31 de Octubre de 2025
+
+### 🎯 Cambios Principales
+
+#### � Panel de Administración - Gestión de Autos
+- **Nueva funcionalidad completa para gestionar autos de todos los usuarios**
+  - Los administradores pueden ver, editar y eliminar autos de cualquier usuario
+  - Implementado ordenamiento ascendente/descendente por ID
+  - Tabla visual con información completa: Usuario, Modelo, Marca, Conector, Autonomía, Año
+  - Interfaz moderna con botones de acción (Editar/Eliminar) por cada auto
+  - Sistema de pestañas en el panel de administración (Usuarios/Autos/Cargadores)
+
+#### 🎨 Logo de la Empresa
+- **Integración visual del logo corporativo**
+  - Logo añadido en la barra superior de todas las páginas principales
+  - Tamaño optimizado (60px) para mejor legibilidad sin afectar la altura de la barra
+  - Visible en: `index.php`, `registro.html`, `principal.html`
+  - Diseño responsive para dispositivos móviles
+
+#### 🖌️ Mejoras de UI/Front‑end
+
+**Barra superior y navegación**
+- Hover unificado en azul corporativo `#1976d2` en enlaces de la barra:
+  - `styles/index.css` → `.top-right a:hover`
+  - `styles/principal.css` → `.top-right a:hover`
+- Textos de navegación sin recortes ("Inicio / Registrarse / Contacto"):
+  - `styles/index.css` → más `padding` en enlaces y `white-space: nowrap`.
+- Consistencia y estabilidad en Principal:
+  - `styles/principal.css` → barra fija, translúcida, `z-index: 1000`; eliminación de reglas duplicadas y `min-height: 100vh`.
+- Tamaño del logo más legible sin cambiar la altura de la barra:
+  - `styles/index.css` y `styles/principal.css` → `.logo` a `60px`.
+- Ajustes de espaciado para evitar solapamientos:
+  - `styles/index.css` → `padding-top: 90px` en el contenedor.
+  - `styles/principal.css` → `padding-top` en la primera sección.
+
+**Tipografía**
+- Unificación de fuente en Principal:
+  - `styles/principal.css` → `font-family: 'Montserrat', Arial, sans-serif;` en `html, body`.
+
+**Formularios**
+- Estilos coherentes para email:
+  - `styles/index.css` y `styles/registro.css` → `input[type="email"]` y estados `:focus` añadidos.
+
+---
+
+### 🔧 Cambios Técnicos Detallados
+
+#### Nueva API
+- `api/autos_admin.php`
+  - API exclusiva para administradores con manejo de autos globales
+  - Verificación de sesión y tipo de usuario (admin)
+  - Headers anti-caché para datos en tiempo real
+  - Endpoints:
+    - `listar`: Obtiene todos los autos con orden configurable (asc/desc)
+    - `editar`: Actualiza cualquier auto sin restricción de usuario
+    - `eliminar`: Elimina cualquier auto del sistema
+  - Soporte para JSON y POST tradicional
+
+#### Modelo Actualizado
+- `modelo/Auto.php`
+  - Nuevos métodos para administradores:
+    - `listarTodos($orden)`: Lista global con orden ASC/DESC por ID
+    - `actualizarAdmin($id, ...)`: Actualiza sin verificar usuario propietario
+    - `eliminarAdmin($id)`: Elimina sin restricción de usuario
+  - Protección contra inyección SQL en parámetro de orden
+
+#### Vista Mejorada
+- `vista/formulario.php`
+  - Sistema de pestañas: Usuarios | Autos | Cargadores
+  - Selector de ordenamiento con opciones visuales:
+    - "ID ascendente (1 → N)"
+    - "ID descendente (N → 1)"
+  - Tabla dinámica de autos con carga asíncrona
+  - Botones de acción con confirmación antes de eliminar
+  - Formularios de edición con validación en tiempo real
+
+#### Estilos Actualizados
+- `styles/formulario.css`
+  - Estilos para sistema de pestañas (tabs)
+  - Tabla responsive para gestión de autos
+  - Botones de acción con efectos hover (Editar: azul, Eliminar: rojo)
+  - Selector de ordenamiento integrado en toolbar
+
+---
+
+### 🐛 Correcciones de Bugs
+
+1. **Barra superior desapareciendo en principal.html**
+   - Reglas CSS duplicadas causaban conflicto
+   - `min-height: 100vh` en `.top-bar` provocaba salto visual
+   - Solución: Unificación de reglas y z-index correcto
+
+2. **Textos de navegación cortados**
+   - Falta de espacio vertical en enlaces
+   - Solución: Aumento de altura de barra a 80px y padding adecuado
+
+3. **Logo poco legible**
+   - Tamaño muy pequeño (36-42px) dificultaba identificación
+   - Solución: Aumentado a 60px manteniendo proporciones
+
+---
+
+### ✨ Mejoras de UX
+
+1. **Panel de Administración más completo**
+   - Tres secciones bien definidas con navegación por pestañas
+   - Gestión centralizada de usuarios, autos y cargadores
+   - Selector visual de ordenamiento (ascendente/descendente)
+   - Feedback inmediato al realizar acciones
+
+2. **Experiencia visual mejorada**
+   - Logo corporativo presente en toda la navegación
+   - Colores consistentes (azul #1976d2 para hover)
+   - Tipografía uniforme (Montserrat) en todas las páginas
+   - Transiciones suaves y efectos hover profesionales
+
+3. **Gestión de autos más intuitiva**
+   - Tabla con toda la información relevante
+   - Botones de acción claramente identificables
+   - Confirmación antes de eliminar (previene errores)
+   - Ordenamiento flexible según necesidades del admin
+
+---
+
+### 📦 Archivos Nuevos
+
+- `api/autos_admin.php` - API para gestión administrativa de autos
+
+### 📝 Archivos Modificados
+
+**Modelos:**
+- `modelo/Auto.php`
+  - Métodos `listarTodos()`, `actualizarAdmin()`, `eliminarAdmin()`
+
+**Vistas:**
+- `vista/index.php` - Logo en barra superior
+- `vista/registro.html` - Logo en barra superior
+- `vista/principal.html` - Logo en barra superior
+- `vista/formulario.php` - Pestaña de Autos con tabla y ordenamiento
+
+**Estilos:**
+- `styles/index.css` - Logo, hover azul, padding, email inputs
+- `styles/principal.css` - Barra fija, logo, tipografía Montserrat, hover azul
+- `styles/registro.css` - Email inputs
+- `styles/formulario.css` - Estilos para pestañas y tabla de autos
+
+---
+
+### 🚀 Próximas Mejoras Sugeridas
+
+- [ ] Búsqueda y filtrado de autos por usuario, marca o modelo
+- [ ] Exportación de datos de autos a CSV/Excel
+- [ ] Historial de modificaciones en autos
+- [ ] Dashboard con estadísticas de autos por marca/año
+- [ ] Validación de autonomía y año con rangos lógicos
+
+---
+
 ## Versión 1.3.0 - 31 de Octubre de 2025
 
 ### 🎯 Cambios Principales
@@ -219,5 +377,5 @@ Para reportar bugs o sugerir mejoras, contactar al equipo de desarrollo.
 
 **Desarrollado por:** Equipo UTU 2025  
 **Fecha de Release:** 31 de Octubre de 2025  
-**Versión Anterior:** 1.2.0  
-**Versión Actual:** 1.3.0
+**Versión Anterior:** 1.3.0  
+**Versión Actual:** 1.4.0

@@ -2,55 +2,51 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-}
-body {
-    min-height: 100vh;
-    min-width: 100vw;
-    margin: 0;
-    padding: 0;
     font-family: 'Montserrat', Arial, sans-serif;
-    background: #f2f6fc;
+}
+/* Barra superior fija y visible siempre */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 16px 0 rgba(0,0,0,0.10);
+    padding: 0 40px;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+.logo {
+    height: 80px;
+    width: auto;
+    margin-right: 32px;
+    display: block;
+    flex-shrink: 0;
 }
 .top-right {
-    position: fixed;
-    top: 30px;
-    right: 40px;
+    margin-left: auto;
     display: flex;
-    gap: 0;
-    z-index: 1000;
-    background: none;
-    box-shadow: none;
+    gap: 32px;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 .top-right a {
-    padding: 0;
-    background: none;
     color: #fff;
-    border: none;
-    border-radius: 0;
-    font-size: 1.15em;
     font-weight: 700;
     text-decoration: none;
-    box-shadow: none;
-    transition: color 0.3s, border-bottom 0.3s;
-    position: relative;
-    margin: 0 12px;
-}
-.top-right a::after {
-    content: '';
-    display: block;
-    width: 0;
-    height: 2px;
-    background: #fff;
-    transition: width 0.3s;
-    position: absolute;
-    left: 0;
-    bottom: -3px;
+    font-size: 1.08em;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+    padding: 2px 8px;
+    white-space: nowrap;
 }
 .top-right a:hover {
-    color: #90caf9;
-}
-.top-right a:hover::after {
-    width: 100%;
+    color: #1976d2;
 }
 .seccion {
     min-height: 100vh;
@@ -62,6 +58,10 @@ body {
     position: relative;
     background-size: cover;
     background-position: center;
+}
+/* Dejar espacio superior para la barra fija en la primera sección */
+.seccion:first-of-type {
+    padding-top: 100px;
 }
 .seccion-1 {
     background: url('https://static.ecestaticos.com/file/f7a/a3c/757/f7aa3c75768c428f6c03244b09ffce5d.gif') no-repeat center center fixed;
@@ -145,18 +145,40 @@ body {
     }
     #map { width: 95vw; }
 }
-@media (max-width: 600px) {
-    .titulo { font-size: 2em; }
-    .subtitulo { font-size: 1em; }
+@media (max-width: 768px) {
+    .top-bar {
+        padding: 0 20px;
+    }
+    .logo {
+        height: 88px;
+        margin-right: 16px;
+    }
     .top-right {
-        top: 12px;
-        right: 8px;
-        flex-direction: column;
-        gap: 0;
+        gap: 16px;
     }
     .top-right a {
-        font-size: 1em;
-        margin: 4px 0;
+        font-size: 0.95em;
+        padding: 2px 4px;
+    }
+    .titulo { font-size: 2.2em; }
+    .subtitulo { font-size: 1.2em; }
+}
+@media (max-width: 600px) {
+    .titulo { font-size: 1.8em; }
+    .subtitulo { font-size: 1em; }
+    .top-bar {
+        padding: 0 12px;
+    }
+    .logo {
+        height: 76px;
+        margin-right: 8px;
+    }
+    .top-right {
+        gap: 12px;
+    }
+    .top-right a {
+        font-size: 0.85em;
+        padding: 2px 3px;
     }
     .info { padding: 0; }
     #map { width: 95vw; height: 180px; }

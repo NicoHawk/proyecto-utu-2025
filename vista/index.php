@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="../styles/index.css">
 </head>
 <body>
-    <button class="menu-btn" id="abrirMenu" title="Abrir menú">&#9776;</button>
-    <div class="menu-lateral" id="menuLateral">
-        <button class="cerrar-menu" id="cerrarMenu" title="Cerrar menú">&times;</button>
-    <a href="principal.html">Inicio</a>
-    <a href="registro.html">Registrarse</a>
-        <a href="#">Contacto</a>
+    <div class="top-bar">
+        <img src="../img/logo.png" alt="Logo de la empresa" class="logo">
+        <div class="top-right">
+            <a href="principal.html">Inicio</a>
+            <a href="registro.html">Registrarse</a>
+            <a href="#">Contacto</a>
+        </div>
     </div>
-    <div class="menu-overlay" id="menuOverlay"></div>
     <div class="container">
         <h1>Iniciar Sesión</h1>
         <form id="loginForm">
@@ -22,7 +22,7 @@
             <input type="password" id="password" name="password" placeholder="Contraseña" required autocomplete="current-password">
             <button type="submit">Ingresar</button>
         </form>
-    <button class="register-btn" onclick="window.location.href='registro.html'">Registrarse</button>
+        <button class="register-btn" onclick="window.location.href='registro.html'">Registrarse</button>
         <div id="mensaje" class="mensaje"></div>
     </div>
     <script>
@@ -71,31 +71,6 @@
                     mensajeDiv.textContent = 'Error al conectar con el servidor.';
                     mensajeDiv.className = 'mensaje error';
                 });
-            });
-
-            // Animación de menú lateral
-            const abrirMenu = document.getElementById('abrirMenu');
-            const cerrarMenu = document.getElementById('cerrarMenu');
-            const menuLateral = document.getElementById('menuLateral');
-            const menuOverlay = document.getElementById('menuOverlay');
-
-            abrirMenu.addEventListener('click', function() {
-                menuLateral.classList.add('abierto');
-                menuOverlay.classList.add('visible');
-            });
-            cerrarMenu.addEventListener('click', function() {
-                menuLateral.classList.remove('abierto');
-                menuOverlay.classList.remove('visible');
-            });
-            menuOverlay.addEventListener('click', function() {
-                menuLateral.classList.remove('abierto');
-                menuOverlay.classList.remove('visible');
-            });
-            document.addEventListener('keydown', function(e) {
-                if (e.key === "Escape") {
-                    menuLateral.classList.remove('abierto');
-                    menuOverlay.classList.remove('visible');
-                }
             });
         });
     </script>

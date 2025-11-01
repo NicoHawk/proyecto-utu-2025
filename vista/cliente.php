@@ -143,7 +143,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
 
         // Función para cargar el listado de autos usando la API (ejemplo de integración API)
         function cargarListado() {
-            fetch('../api/cliente.php?listar=1')
+            // Listar autos del usuario autenticado
+            fetch('../api/autos.php')
             .then(res => res.json())
             .then(autos => {
                 // Si la API devuelve autos, mostrar tabla, si no, mostrar mensaje
@@ -177,9 +178,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
         document.getElementById('formAuto').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
-            // Aquí deberías tener un endpoint en la API para agregar autos, por ejemplo: api/auto.php
-            // Este ejemplo solo muestra cómo sería la llamada:
-            fetch('../api/auto.php', {
+            // Usamos la API real de autos
+            fetch('../api/autos.php', {
                 method: 'POST',
                 body: new URLSearchParams({
                     accion: 'agregar',
@@ -233,7 +233,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
                     autonomia: inputs[3].value,
                     anio: inputs[4].value
                 };
-                fetch('../api/auto.php', {
+                fetch('../api/autos.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(datos)
@@ -251,7 +251,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
             if (e.target.classList.contains('btn-eliminar')) {
                 const tr = e.target.closest('tr');
                 const id = tr.getAttribute('data-id');
-                fetch('../api/auto.php', {
+                fetch('../api/autos.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ accion: 'eliminar', id: id })
@@ -273,7 +273,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
             e.preventDefault();
             const formData = new FormData(this);
             formData.append('accion', 'agregar');
-            fetch('../controlador/ViajeControlador.php', {
+            fetch('../api/viajes.php', {
                 method: 'POST',
                 body: formData
             })
@@ -286,7 +286,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
         });
 
         function listarViajes() {
-            fetch('../controlador/ViajeControlador.php?accion=listar')
+            fetch('../api/viajes.php?accion=listar')
                 .then(res => res.json())
                 .then(data => {
                     const tbody = document.querySelector('#tablaViajes tbody');

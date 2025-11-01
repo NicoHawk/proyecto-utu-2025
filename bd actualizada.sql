@@ -94,7 +94,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES ('admin','admin@gmail.com','$2y$10$E39mbImb/JbZf8iFce/aoejoBoIvrVi.M00jWWSLPZEd4ncmHC42O','admin'),('cargador','cargador@gmail.com','$2y$10$qvqnDkepLc0J65mFD1EKYesJdN5cv7OvV359OmFrOjwI7.Cw5bfWu','cargador'),('nico','nico@gmail.com','$2y$10$mO5TnDsORUgv3coGzGCvyerHBYMUZtZCkyCEOVIAsu1KeNRUE0PWO','cliente'),('usuario','usuario@gmail.com','$2y$10$6rOwqC73plBAh.oPEbmxYuhSV0zcE2giqCwpB.FVMh2UuqY5wLxsu','cliente');
+INSERT INTO `usuarios` VALUES ('admin','admin@gmail.com','$2y$10$E39mbImb/JbZf8iFce/aoejoBoIvrVi.M00jWWSLPZEd4ncmHC42O','admin'),('cargador','cargador@gmail.com','$2y$10$qvqnDkepLc0J65mFD1EKYesJdN5cv7OvV359OmFrOjwI7.Cw5bfWu','cargador'),('nico','nico@gmail.com','$2y$10$mO5TnDsORUgv3coGzGCvyerHBYMUZtZCkyCEOVIAsu1KeNRUE0PWO','cliente'),('usuario','usuario@gmail.com','$2y$10$AaSJ595kWl4D0j/.HX9YmOlRqOAlxGQQBzI8LsgZLxMH2MaW98g2C','cliente');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -136,4 +136,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-31  6:33:24
+-- Dump completed on 2025-10-31 18:49:18

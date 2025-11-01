@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -8,9 +8,12 @@
     <link rel="stylesheet" href="../styles/principal.css">
 </head>
 <body>
-    <div class="top-right">
-    <a href="index.php">Iniciar Sesión</a>
-    <a href="registro.html">Registrarse</a>
+    <div class="top-bar">
+        <img src="../img/logo.png" alt="Logo de la empresa" class="logo">
+        <div class="top-right">
+            <a href="index.php">Iniciar Sesión</a>
+            <a href="registro.html">Registrarse</a>
+        </div>
     </div>
     <div class="seccion seccion-1">
         <div class="titulo">Bienvenido a Gestión de Autos Eléctricos</div>
@@ -33,8 +36,8 @@
     </div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        // Obtener cargadores desde el backend
-    fetch('../api/cargadores.php')
+        // Obtener cargadores desde el backend usando la API
+        fetch('../api/cargadores.php?accion=listar')
             .then(response => response.json())
             .then(cargadores => {
                 // Si no hay cargadores, centramos el mapa en una ubicación por defecto

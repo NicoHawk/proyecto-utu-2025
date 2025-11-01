@@ -36,6 +36,20 @@ class Usuario {
         }
     }
 
+    // Verificar credenciales para login (por usuario)
+    public function verificarCredencialesPorUsuario($usuario, $password) {
+        $sql = "SELECT * FROM {$this->tabla} WHERE usuario = ?";
+        $stmt = $this->conexion->prepare($sql);
+        $stmt->execute([$usuario]);
+        $usuarioData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($usuarioData && password_verify($password, $usuarioData['password'])) {
+            return $usuarioData;
+        } else {
+            return false;
+        }
+    }
+
     // Obtener tipo de usuario
     public function obtenerTipoUsuario($usuario) {
         $sql = "SELECT tipo_usuario FROM {$this->tabla} WHERE usuario = ?";

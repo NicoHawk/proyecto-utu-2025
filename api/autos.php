@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../controlador/AutoControlador.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -14,10 +13,9 @@ switch ($method) {
         exit;
 
     case 'GET':
-        // Listar autos
-        // El controlador espera 'accion' => 'listar'
-        $_POST['accion'] = 'listar';
-        require __DIR__ . '/../controlador/AutoControlador.php';
+        // Listar autos: preparar la acción y cargar el controlador una sola vez
+        $_POST = ['accion' => 'listar'];
+        require_once __DIR__ . '/../controlador/AutoControlador.php';
         break;
 
     case 'POST':
@@ -49,7 +47,7 @@ switch ($method) {
             echo json_encode(modificarUsuario($nombre, $nuevoNombre, $nuevoTipoUsuario, $nuevaPassword));
         } else if (isset($input['accion'])) {
             $_POST = $input; // Para que AutoControlador.php lo procese igual
-            require __DIR__ . '/../controlador/AutoControlador.php';
+            require_once __DIR__ . '/../controlador/AutoControlador.php';
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción POST no soportada']);
         }
@@ -59,7 +57,7 @@ switch ($method) {
         $input = json_decode(file_get_contents("php://input"), true);
         if ($input && isset($input['accion']) && $input['accion'] === 'editar') {
             $_POST = $input;
-            require __DIR__ . '/../controlador/AutoControlador.php';
+            require_once __DIR__ . '/../controlador/AutoControlador.php';
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción PUT no soportada']);
         }
@@ -69,7 +67,7 @@ switch ($method) {
         $input = json_decode(file_get_contents("php://input"), true);
         if ($input && isset($input['accion']) && $input['accion'] === 'eliminar') {
             $_POST = $input;
-            require __DIR__ . '/../controlador/AutoControlador.php';
+            require_once __DIR__ . '/../controlador/AutoControlador.php';
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción DELETE no soportada']);
         }
