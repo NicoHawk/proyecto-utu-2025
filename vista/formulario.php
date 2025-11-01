@@ -75,6 +75,23 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         </div>
         <div class="tab-content" id="tab-autos" style="display:none;">
             <h1>Gestión de Autos de Clientes</h1>
+            
+            <!-- Formulario para agregar auto -->
+            <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                <h3 style="margin-top:0; color:#1976d2;">Agregar Nuevo Auto</h3>
+                <form id="formAgregarAuto" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+                    <select id="nuevoAutoUsuario" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
+                        <option value="">Seleccionar Usuario</option>
+                    </select>
+                    <input type="text" id="nuevoAutoModelo" placeholder="Modelo" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
+                    <input type="text" id="nuevoAutoMarca" placeholder="Marca" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
+                    <input type="text" id="nuevoAutoConector" placeholder="Conector (ej: Tipo 1, Tipo 2)" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
+                    <input type="number" id="nuevoAutoAutonomia" placeholder="Autonomía (km)" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
+                    <input type="number" id="nuevoAutoAnio" placeholder="Año" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
+                    <button type="submit" style="background:#4CAF50; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:bold;">Agregar Auto</button>
+                </form>
+            </div>
+
             <div id="autosToolbar" style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin:10px 0 6px 0;">
                 <label for="ordenAutos" style="font-size:0.95em; color:#555;">Orden:</label>
                 <select id="ordenAutos" style="padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; color:#333;">
@@ -128,6 +145,11 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                             if (window.lastCenter) map.setCenter(window.lastCenter);
                         } catch (e) { /* ignorar */ }
                     }, 200);
+                }
+                // Cargar autos y usuarios si se abre la pestaña de autos
+                if (tab === 'autos') {
+                    listarAutos();
+                    cargarUsuariosParaAutos();
                 }
             }
         });
@@ -435,7 +457,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         // Tomamos el orden desde el selector (por defecto asc)
         const ordenSel = orden || (document.getElementById('ordenAutos') ? document.getElementById('ordenAutos').value : 'asc');
         // Forzamos refresco con timestamp
-        const url = `../api/autos_admin.php?accion=listar&orden=${encodeURIComponent(ordenSel)}&_=${Date.now()}`;
+        const url = `../api/admin.php?listar_autos=1&orden=${encodeURIComponent(ordenSel)}&_=${Date.now()}`;
         fetch(url)
             .then(res => res.json())
             .then(autos => {
@@ -531,11 +553,11 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         const autonomia = document.getElementById(`input-autonomia-${id}`).value;
         const anio = document.getElementById(`input-anio-${id}`).value;
 
-        fetch('../api/autos_admin.php', {
+        fetch('../api/admin.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                accion: 'editar',
+                accion: 'editar_auto',
                 id: id,
                 modelo: modelo,
                 marca: marca,
@@ -563,11 +585,11 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
     window.eliminarAuto = function(id) {
         if (!confirm('¿Está seguro de eliminar este auto?')) return;
 
-        fetch('../api/autos_admin.php', {
+        fetch('../api/admin.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                accion: 'eliminar',
+                accion: 'eliminar_auto',
                 id: id
             })
         })
@@ -592,6 +614,78 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
             const tab = this.dataset.tab;
             if (tab === 'autos') {
                 listarAutos();
+                cargarUsuariosParaAutos();
+            }
+        });
+    });
+
+    // Función para cargar usuarios en el selector
+    function cargarUsuariosParaAutos() {
+        fetch("../api/admin.php?listar_usuarios=1")
+            .then(res => res.json())
+            .then(usuarios => {
+                const select = document.getElementById('nuevoAutoUsuario');
+                select.innerHTML = '<option value="">Seleccionar Usuario</option>';
+                // Filtrar solo usuarios de tipo "cliente"
+                const clientes = usuarios.filter(usuario => usuario.tipo_usuario === 'cliente');
+                clientes.forEach(usuario => {
+                    const option = document.createElement('option');
+                    option.value = usuario.usuario;
+                    option.textContent = usuario.usuario;
+                    select.appendChild(option);
+                });
+            })
+            .catch(err => console.error('Error al cargar usuarios:', err));
+    }
+
+    // Manejar formulario de agregar auto
+    document.getElementById('formAgregarAuto').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const usuario = document.getElementById('nuevoAutoUsuario').value;
+        const modelo = document.getElementById('nuevoAutoModelo').value;
+        const marca = document.getElementById('nuevoAutoMarca').value;
+        const conector = document.getElementById('nuevoAutoConector').value;
+        const autonomia = document.getElementById('nuevoAutoAutonomia').value;
+        const anio = document.getElementById('nuevoAutoAnio').value;
+
+        fetch('../api/admin.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                accion: 'agregar_auto',
+                usuario: usuario,
+                modelo: modelo,
+                marca: marca,
+                conector: conector,
+                autonomia: autonomia,
+                anio: anio
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.exito) {
+                alert('Auto agregado correctamente');
+                // Limpiar formulario
+                document.getElementById('formAgregarAuto').reset();
+                // Recargar lista
+                listarAutos();
+            } else {
+                alert('Error al agregar: ' + (data.mensaje || data.error));
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Error de conexión');
+        });
+    });
+
+    // Cargar autos cuando se abre la pestaña
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const tab = this.dataset.tab;
+            if (tab === 'autos') {
+                listarAutos();
             }
         });
     });
@@ -604,10 +698,11 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         }
     })();
 
-    // Botón para cerrar sesión
-    document.getElementById("btn-cerrar-sesion").onclick = function () {
-        window.location.href = "logout.php";
-    };
+    // Botón para cerrar sesión (si existiera)
+    const btnCerrar = document.getElementById("btn-cerrar-sesion");
+    if (btnCerrar) {
+        btnCerrar.onclick = function () { window.location.href = "logout.php"; };
+    }
     </script>
 </body>
 </html>

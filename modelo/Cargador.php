@@ -8,7 +8,7 @@ class Cargador {
         $this->conexion = conectar();
     }
 
-    public function insertar($nombre, $latitud, $longitud, $descripcion) {
+    public function insertar($nombre, $latitud, $longitud, $descripcion = '') {
         $sql = "INSERT INTO cargadores (nombre, latitud, longitud, descripcion) VALUES (?, ?, ?, ?)";
         $stmt = $this->conexion->prepare($sql);
         return $stmt->execute([$nombre, $latitud, $longitud, $descripcion]);

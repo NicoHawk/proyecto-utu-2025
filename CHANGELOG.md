@@ -1,10 +1,256 @@
 # 📋 Changelog - Sistema de Gestión de Autos Eléctricos
 
+## Versión 1.5.0 - 1 de Noviembre de 2025
+
+### 🎯 Cambios Principales
+
+#### 🧭 Panel de Cliente con pestañas (Autos/Viajes)
+- Rediseño del panel de cliente con sidebar fija y navegación por pestañas (Autos/Viajes).
+- Estructura por tarjetas `.tab-content` para separar formularios y listados.
+- JavaScript de cambio de pestañas y estilos responsive en `styles/cliente.css`.
+
+#### 🚘 Listado de autos del cliente (fix)
+- `api/autos.php` ahora lista los autos del usuario autenticado correctamente (GET).
+- Soporta agregar/editar/eliminar via JSON o `application/x-www-form-urlencoded`.
+- Se eliminaron dependencias del flujo legacy del controlador que impedían listar.
+
+#### 🎨 Panel de Administración minimalista (claro)
+- `styles/formulario.css` rediseñado: sidebar blanca, tarjetas limpias, inputs/tablas con foco accesible y sombras suaves.
+- Ajuste en `vista/formulario.php` para evitar error si no existe `#btn-cerrar-sesion`.
+
+#### 🧩 Conflicto de estilos resuelto en cliente
+- Se quitó el import de `../styles/formulario.css` en `vista/cliente.php` para no romper el layout del cliente.
+
+#### ➕ Panel de Administración - Agregar Autos a Usuarios
+- **Funcionalidad completa para que el administrador agregue autos a cualquier usuario**
+  - Formulario intuitivo en la pestaña "Autos" del panel de administración
+  - Selector dinámico de usuarios (carga desde la base de datos)
+  - Campos para ingresar: Modelo, Marca, Conector, Autonomía (km), Año
+  - Validación de campos requeridos
+  - Actualización automática de la lista tras agregar un auto
+  - Diseño responsive con grid layout
+
+#### 🔄 Optimización y Unificación de APIs Administrativas
+- **Consolidación de APIs en `admin.php`**
+  - Todas las operaciones administrativas ahora en una sola API unificada
+  - Reduce la cantidad de archivos y mejora la mantenibilidad
+  - Implementación más limpia y organizada
+  - Mejor reutilización de código (función `verificarAdmin()`)
+  - Eliminado `api/autos_admin.php` (integrado en `admin.php`)
+
+---
+
+### 🔧 Cambios Técnicos Detallados
+
+#### Correcciones de Arquitectura MVC ⚙️
+- **Patrón MVC respetado al 100%**
+  - `CargadorControlador.php`: Refactorizado completamente
+    - Ahora usa el modelo `Cargador` en lugar de hacer queries SQL directas
+    - Funciones: `listarCargadores()`, `agregarCargador()`, `eliminarCargador()`
+  - `UsuarioControlador.php`: Orden de parámetros unificado
+    - `registrarUsuario($username, $password, $tipo_usuario, $correo = '')`
+    - Parámetro `correo` opcional con generación automática
+  - `admin.php`: Eliminada lógica de base de datos
+    - Ya no usa `mysqli` directamente
+    - Todas las operaciones pasan por el Controlador
+    - Eliminada función `getCargadorConn()`
+  - `Cargador.php` (Modelo): Parámetro `descripcion` ahora opcional
+
+#### API de Autos para usuario (nueva capa) 🚗
+- `api/autos.php`
+  - Inicia sesión si no estaba iniciada.
+  - GET → devuelve autos del usuario autenticado.
+  - POST/PUT/DELETE → mapeo a acciones de agregar/editar/eliminar para el usuario.
+  - Soporta JSON y `application/x-www-form-urlencoded`.
+
+#### Controlador Actualizado
+- `controlador/AutoControlador.php`
+  - **Nuevas funciones administrativas:**
+    - `listarAutosAdmin($orden)`: Lista todos los autos con orden configurable
+    - `agregarAutoAdmin(...)`: Agrega un auto a cualquier usuario
+    - `editarAutoAdmin(...)`: Edita cualquier auto del sistema
+    - `eliminarAutoAdmin($id)`: Elimina cualquier auto
+  - Mantiene compatibilidad con llamadas directas (legacy)
+  - **Patrón MVC respetado:** API → Controlador → Modelo
+
+- **Nuevas funciones para usuario (no admin):**
+  - `listarAutosUsuario($usuario)`
+  - `agregarAutoUsuario($usuario, ...)`
+  - `editarAutoUsuario($usuario, ...)`
+  - `eliminarAutoUsuario($usuario, $id)`
+
+#### API Unificada
+- `api/admin.php`
+  - **Nuevos endpoints GET:**
+    - `listar_autos`: Lista todos los autos con ordenamiento (requiere admin)
+  - **Nuevos endpoints POST:**
+    - `accion=agregar_auto`: Agrega un auto a un usuario
+    - `accion=editar_auto`: Edita cualquier auto del sistema
+    - `accion=eliminar_auto`: Elimina cualquier auto del sistema
+  - **Nueva función:** `verificarAdmin()` - Verifica permisos antes de ejecutar operaciones sensibles
+  - **Soporte dual:** Maneja tanto JSON como POST tradicional
+  - **Headers anti-caché** añadidos para datos en tiempo real
+  - **Arquitectura MVC:** Llama a funciones del `AutoControlador` en lugar del modelo directamente
+
+#### Vista Mejorada
+- `vista/formulario.php`
+  - **Formulario de agregar auto:**
+    - Diseño en grid responsive
+    - Selector de usuarios con carga dinámica
+    - Campos: Usuario, Modelo, Marca, Conector, Autonomía, Año
+    - Botón verde destacado para agregar
+  - **JavaScript implementado:**
+    - `cargarUsuariosParaAutos()`: Carga lista de usuarios al abrir pestaña
+    - Manejador de submit para formulario de agregar auto
+    - Integración con sistema de pestañas del sidebar
+    - Limpieza automática del formulario tras agregar
+  - **Actualización de fetch:**
+    - Todas las llamadas ahora usan `../api/admin.php`
+    - Nombres de acciones actualizados para consistencia
+
+- `vista/cliente.php`
+  - Nueva estructura con pestañas: `#tab-autos` y `#tab-viajes`.
+  - Eliminado el import de `../styles/formulario.css` para evitar conflictos.
+  - JS para cambiar pestañas y cargar listados de autos y viajes.
+
+---
+
+### � Archivos Eliminados
+
+- ❌ `api/autos_admin.php` - Funcionalidad integrada en `admin.php`
+
+### 📝 Archivos Modificados
+
+**Controladores:**
+- `controlador/AutoControlador.php`
+  - Funciones administrativas: `listarAutosAdmin()`, `agregarAutoAdmin()`, `editarAutoAdmin()`, `eliminarAutoAdmin()`
+  - Arquitectura mejorada manteniendo patrón MVC
+- `controlador/CargadorControlador.php` ⚙️
+  - Refactorizado completamente para usar el Modelo
+  - Eliminadas queries SQL directas
+  - Funciones: `listarCargadores()`, `agregarCargador()`, `eliminarCargador()`
+- `controlador/UsuarioControlador.php` ⚙️
+  - Orden de parámetros corregido en `registrarUsuario()`
+  - Soporte para correo opcional
+
+**Modelos:**
+- `modelo/Cargador.php` ⚙️
+  - Parámetro `descripcion` ahora opcional en `insertar()`
+
+**APIs:**
+- `api/admin.php`
+  - Integración completa de gestión de autos
+  - Función `verificarAdmin()` para seguridad
+  - Soporte JSON/POST unificado
+  - Llama a funciones del `AutoControlador` (respeta MVC)
+  - Endpoints para listar, agregar, editar y eliminar autos
+  - **Eliminada lógica de base de datos directa** ⚙️
+  - **Ahora usa `CargadorControlador` correctamente** ⚙️
+- `api/registro.php` ⚙️
+  - Orden de parámetros corregido para llamar a `registrarUsuario()`
+
+**Vistas:**
+- `vista/formulario.php`
+  - Formulario de agregar auto en pestaña "Autos"
+  - Función `cargarUsuariosParaAutos()`
+  - Manejador de submit para agregar autos
+  - Actualización de URLs de fetch (de `autos_admin.php` a `admin.php`)
+  - Actualización de nombres de acciones
+
+**Estilos:**
+- Formulario con fondo `#f8f9fa` y bordes redondeados
+- Grid responsive que se adapta al tamaño de la pantalla
+- Botón verde (`#4CAF50`) para agregar
+- Inputs con estilo consistente
+
+---
+
+### 🐛 Correcciones de Bugs
+
+1. **Carga de usuarios al abrir pestaña de Autos**
+   - Los usuarios ahora se cargan automáticamente cuando se abre la pestaña
+   - Implementado en el event listener de las pestañas del sidebar
+
+2. **Listado de autos del cliente no aparecía**
+  - La API dependía del bloque legacy del controlador al ser requerida.
+  - Solución: nuevas funciones explícitas en el controlador y mapeo directo en `api/autos.php`.
+
+3. **Conflicto de estilos en cliente**
+  - `formulario.css` afectaba al layout del cliente.
+  - Solución: se eliminó el import en `vista/cliente.php`.
+
+4. **Error JS potencial en admin**
+  - Acceso a `#btn-cerrar-sesion` inexistente.
+  - Solución: verificación de existencia antes de asignar el handler.
+
+---
+
+### ✨ Mejoras de UX
+
+1. **Proceso de agregar autos simplificado**
+   - Formulario claro y organizado en la parte superior
+   - Selector de usuario con formato: "nombre_usuario (tipo_usuario)"
+   - Feedback inmediato con alert tras agregar
+   - Lista de autos se actualiza automáticamente
+
+2. **Consistencia visual**
+   - Diseño alineado con el resto del panel de administración
+   - Colores corporativos mantenidos
+   - Espaciado adecuado entre elementos
+
+3. **Cliente con navegación por pestañas**
+  - Sidebar clara con estados activo/hover consistentes.
+  - Transiciones suaves y tarjetas diferenciadas por sección.
+
+4. **Admin minimalista**
+  - Interfaz más limpia, foco accesible en inputs, tablas claras.
+
+3. **Mejor organización del código**
+   - API unificada más fácil de mantener
+   - Menos archivos que gestionar
+   - Código más limpio y reutilizable
+
+---
+
+### 🚀 Beneficios de la Optimización
+
+1. **Menos archivos que mantener**
+   - Reducción de código duplicado
+   - Una sola API para todas las operaciones admin
+
+2. **Mejor organización**
+   - Todas las operaciones admin centralizadas
+   - Más fácil encontrar y modificar funcionalidades
+
+3. **Código más limpio**
+   - Función `verificarAdmin()` reutilizable
+   - Manejo consistente de JSON y POST tradicional
+   - Headers centralizados
+   - **Respeta patrón MVC:** API → Controlador → Modelo
+
+4. **Mejor seguridad**
+   - Verificación de permisos centralizada
+   - Menos puntos de entrada a validar
+
+---
+
+### 🚀 Próximas Mejoras Sugeridas
+
+- [ ] Validación de datos del auto (ej: año entre 1900 y año actual+1)
+- [ ] Autocompletar modelo/marca basado en marcas existentes
+- [ ] Vista previa antes de agregar el auto
+- [ ] Agregar múltiples autos de una vez (batch insert)
+- [ ] Importar autos desde CSV/Excel
+- [ ] Búsqueda y filtrado de autos por usuario, marca o modelo
+- [ ] Exportación de datos de autos a CSV/Excel
+
+---
+
 ## Versión 1.4.0 - 31 de Octubre de 2025
 
 ### 🎯 Cambios Principales
 
-#### � Panel de Administración - Gestión de Autos
+#### 🚗 Panel de Administración - Gestión de Autos
 - **Nueva funcionalidad completa para gestionar autos de todos los usuarios**
   - Los administradores pueden ver, editar y eliminar autos de cualquier usuario
   - Implementado ordenamiento ascendente/descendente por ID
@@ -217,6 +463,9 @@ ALTER TABLE usuarios ADD COLUMN correo VARCHAR(100) NOT NULL UNIQUE;
 
 **Modelos:**
 - `modelo/Usuario.php`
+- `api/autos.php`
+  - Endpoints para listar/agregar/editar/eliminar autos del usuario autenticado
+  - Soporte JSON y `application/x-www-form-urlencoded`
   - Método `insertar()`: Ahora acepta parámetro `$correo`
   - Método `verificarCredenciales()`: Cambiado de usuario a correo
   - Método `modificar()`: Añadido parámetro `$nuevoCorreo` con 4 casos de actualización
@@ -225,12 +474,12 @@ ALTER TABLE usuarios ADD COLUMN correo VARCHAR(100) NOT NULL UNIQUE;
 **Controladores:**
 - `controlador/UsuarioControlador.php`
   - `loginUsuario()`: Ahora recibe `$correo` en lugar de `$username`
+- `vista/cliente.php`
+  - Estructura en pestañas (Autos/Viajes) y limpieza de import de estilos
   - `registrarUsuario()`: Acepta parámetro `$correo`
   - `modificarUsuario()`: Añadido parámetro `$nuevoCorreo` con lógica condicional
-
-**APIs:**
-- `api/login.php`
-  - Cambiado de `$_POST['username']` a `$_POST['correo']`
+- `styles/formulario.css`: rediseño minimalista claro del admin (sidebar blanca, tarjetas, foco accesible)
+- `styles/cliente.css`: sidebar y tarjetas para cliente, animaciones y responsive
   
 - `api/registro.php`
   - Añadido manejo de campo `correo`

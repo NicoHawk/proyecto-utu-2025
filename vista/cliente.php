@@ -16,21 +16,41 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
 </head>
 
 <body>
-    <div class="usuario-menu">
-        <div class="usuario-trigger">
-            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Usuario" class="icono-usuario">
-            <span class="saludo">Hola, <?php echo htmlspecialchars($_SESSION['usuario']); ?></span>
-            <span class="flecha">&#9660;</span>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-logo">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Logo" />
         </div>
-        <div class="usuario-dropdown">
-            <a href="#" id="editarPerfil">Editar perfil</a>
-            <a href="logout.php">Cerrar sesión</a>
-        </div>
-    </div>
-    <div class="container">
-        <h1>Bienvenido</h1>
-        <p>Has iniciado sesión como cliente.<br>¡Disfruta de tu experiencia!</p>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item active" data-tab="autos">
+                <span class="sidebar-icon">🚗</span>
+                <span class="sidebar-text">Autos</span>
+            </li>
+            <li class="sidebar-item" data-tab="viajes">
+                <span class="sidebar-icon">🗺️</span>
+                <span class="sidebar-text">Viajes</span>
+            </li>
+            <li class="sidebar-item" onclick="window.location.href='logout.php'">
+                <span class="sidebar-icon">🚪</span>
+                <span class="sidebar-text">Salir</span>
+            </li>
+        </ul>
+    </nav>
 
+    <!-- Panel principal -->
+    <div class="main-panel">
+        <!-- Menú usuario arriba a la derecha -->
+        <div class="usuario-menu">
+            <div class="usuario-trigger">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Usuario" class="icono-usuario">
+                <span class="saludo">Hola, <?php echo htmlspecialchars($_SESSION['usuario']); ?></span>
+                <span class="flecha">&#9660;</span>
+            </div>
+            <div class="usuario-dropdown">
+                <a href="#" id="editarPerfil">Editar perfil</a>
+                <a href="logout.php">Cerrar sesión</a>
+            </div>
+        </div>
         <!-- Modal para editar perfil -->
         <div id="modalEditarPerfil" class="modal">
             <div class="modal-content">
@@ -52,72 +72,99 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
             </div>
         </div>
 
-        <!-- Formulario para agregar un auto -->
-        <h2 style="margin-top:40px;">Agregar Auto</h2>
-        <form id="formAuto" style="margin-bottom:40px; display: flex; flex-direction: column; gap: 0;">
-            <label for="modelo">Modelo:</label>
-            <input type="text" id="modelo" name="modelo" required>
+        <!-- Pestaña Autos -->
+        <div id="tab-autos" class="tab-content">
+            <h1>Mis Autos</h1>
+            <p style="color: #b2ebf2; text-shadow: 1px 1px 4px #222;">Gestiona tu flota de vehículos eléctricos</p>
 
-            <label for="marca">Marca:</label>
-            <input type="text" id="marca" name="marca" required>
+            <!-- Formulario para agregar un auto -->
+            <h2 style="margin-top:40px;">Agregar Auto</h2>
+            <form id="formAuto" style="margin-bottom:40px; display: flex; flex-direction: column; gap: 0;">
+                <label for="modelo">Modelo:</label>
+                <input type="text" id="modelo" name="modelo" required>
 
-            <label for="conector">Tipo de Conector:</label>
-            <input type="text" id="conector" name="conector" required>
+                <label for="marca">Marca:</label>
+                <input type="text" id="marca" name="marca" required>
 
-            <label for="autonomia">Autonomía (km):</label>
-            <input type="number" id="autonomia" name="autonomia" min="0" required>
+                <label for="conector">Tipo de Conector:</label>
+                <input type="text" id="conector" name="conector" required>
 
-            <label for="anio">Año de Fabricación:</label>
-            <input type="number" id="anio" name="anio" min="1900" max="2099" required>
+                <label for="autonomia">Autonomía (km):</label>
+                <input type="number" id="autonomia" name="autonomia" min="0" required>
 
-            <button type="submit" style="margin-top:24px;">Agregar Auto</button>
-        </form>
+                <label for="anio">Año de Fabricación:</label>
+                <input type="number" id="anio" name="anio" min="1900" max="2099" required>
 
-        <!-- Listado de autos -->
-        <h2 style="margin-top:40px;">Mis Autos</h2>
-        <div id="listado_autos"></div>
-        <!-- Mensaje de éxito/error SOLO ABAJO -->
-        <div id="mensaje" style="margin-top:20px;"></div>
+                <button type="submit" style="margin-top:24px;">Agregar Auto</button>
+            </form>
 
-        <!-- Planificación de viajes -->
-        <h2 style="margin-top:40px;">Planificar Viaje</h2>
-        <form id="formViaje" style="margin-bottom:40px; display: flex; flex-direction: column; gap: 0;">
-            <label for="origen">Origen:</label>
-            <input type="text" id="origen" name="origen" required>
+            <!-- Listado de autos -->
+            <h2 style="margin-top:40px;">Listado de Autos</h2>
+            <div id="listado_autos"></div>
+            <!-- Mensaje de éxito/error -->
+            <div id="mensaje" style="margin-top:20px;"></div>
+        </div>
 
-            <label for="destino">Destino:</label>
-            <input type="text" id="destino" name="destino" required>
+        <!-- Pestaña Viajes -->
+        <div id="tab-viajes" class="tab-content" style="display: none;">
+            <h1>Planificación de Viajes</h1>
+            <p style="color: #b2ebf2; text-shadow: 1px 1px 4px #222;">Organiza tus rutas y viajes eléctricos</p>
 
-            <label for="fecha">Fecha y hora:</label>
-            <input type="datetime-local" id="fecha" name="fecha" required>
+            <!-- Planificación de viajes -->
+            <h2 style="margin-top:40px;">Planificar Viaje</h2>
+            <form id="formViaje" style="margin-bottom:40px; display: flex; flex-direction: column; gap: 0;">
+                <label for="origen">Origen:</label>
+                <input type="text" id="origen" name="origen" required>
 
-            <label for="distancia_km">Distancia (km):</label>
-            <input type="number" id="distancia_km" name="distancia_km" min="1" required>
+                <label for="destino">Destino:</label>
+                <input type="text" id="destino" name="destino" required>
 
-            <label for="observaciones">Observaciones:</label>
-            <input type="text" id="observaciones" name="observaciones">
+                <label for="fecha">Fecha y hora:</label>
+                <input type="datetime-local" id="fecha" name="fecha" required>
 
-            <button type="submit" style="margin-top:24px;">Guardar Viaje</button>
-        </form>
-        <div id="mensajeViaje" style="margin-bottom:20px;"></div>
+                <label for="distancia_km">Distancia (km):</label>
+                <input type="number" id="distancia_km" name="distancia_km" min="1" required>
 
-        <!-- Historial de viajes -->
-        <h2>Historial de Viajes</h2>
-        <table id="tablaViajes" style="width:100%;margin-bottom:40px;">
-            <thead>
-                <tr>
-                    <th>Origen</th>
-                    <th>Destino</th>
-                    <th>Fecha</th>
-                    <th>Distancia (km)</th>
-                    <th>Observaciones</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+                <label for="observaciones">Observaciones:</label>
+                <input type="text" id="observaciones" name="observaciones">
+
+                <button type="submit" style="margin-top:24px;">Guardar Viaje</button>
+            </form>
+            <div id="mensajeViaje" style="margin-bottom:20px;"></div>
+
+            <!-- Historial de viajes -->
+            <h2>Historial de Viajes</h2>
+            <table id="tablaViajes" style="width:100%;margin-bottom:40px;">
+                <thead>
+                    <tr>
+                        <th>Origen</th>
+                        <th>Destino</th>
+                        <th>Fecha</th>
+                        <th>Distancia (km)</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
+        // Sidebar -> cambiar pestañas
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const tab = this.dataset.tab;
+                if (!tab) return;
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+                const target = document.getElementById('tab-' + tab);
+                if (target) {
+                    target.style.display = 'block';
+                }
+            });
+        });
+
         // Protección extra: Si el usuario no está logueado, redirige (por si el navegador muestra caché)
         // Esto fuerza recarga y chequeo de sesión en el servidor
         if (!window.navigator.cookieEnabled) {

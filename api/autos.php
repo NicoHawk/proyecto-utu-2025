@@ -5,6 +5,11 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 
+// Iniciar sesión si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
@@ -13,9 +18,11 @@ switch ($method) {
         exit;
 
     case 'GET':
-        // Listar autos: preparar la acción y cargar el controlador una sola vez
-        $_POST = ['accion' => 'listar'];
+        // Listar autos del usuario autenticado
         require_once __DIR__ . '/../controlador/AutoControlador.php';
+        $usuario = $_SESSION['usuario'] ?? '';
+        $autos = listarAutosUsuario($usuario);
+        echo json_encode($autos);
         break;
 
     case 'POST':
@@ -46,8 +53,43 @@ switch ($method) {
             require_once __DIR__ . '/../controlador/UsuarioControlador.php';
             echo json_encode(modificarUsuario($nombre, $nuevoNombre, $nuevoTipoUsuario, $nuevaPassword));
         } else if (isset($input['accion'])) {
-            $_POST = $input; // Para que AutoControlador.php lo procese igual
             require_once __DIR__ . '/../controlador/AutoControlador.php';
+            $accion = $input['accion'];
+            $usuario = $_SESSION['usuario'] ?? '';
+            switch ($accion) {
+                case 'agregar':
+                    echo json_encode(agregarAutoUsuario(
+                        $usuario,
+                        $input['modelo'] ?? '',
+                        $input['marca'] ?? '',
+                        $input['conector'] ?? '',
+                        $input['autonomia'] ?? 0,
+                        $input['anio'] ?? 0
+                    ));
+                    break;
+                case 'editar':
+                    echo json_encode(editarAutoUsuario(
+                        $usuario,
+                        $input['id'] ?? 0,
+                        $input['modelo'] ?? '',
+                        $input['marca'] ?? '',
+                        $input['conector'] ?? '',
+                        $input['autonomia'] ?? 0,
+                        $input['anio'] ?? 0
+                    ));
+                    break;
+                case 'eliminar':
+                    echo json_encode(eliminarAutoUsuario(
+                        $usuario,
+                        $input['id'] ?? 0
+                    ));
+                    break;
+                case 'listar':
+                    echo json_encode(listarAutosUsuario($usuario));
+                    break;
+                default:
+                    echo json_encode(['exito' => false, 'error' => 'Acción no soportada']);
+            }
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción POST no soportada']);
         }
@@ -56,8 +98,17 @@ switch ($method) {
     case 'PUT':
         $input = json_decode(file_get_contents("php://input"), true);
         if ($input && isset($input['accion']) && $input['accion'] === 'editar') {
-            $_POST = $input;
             require_once __DIR__ . '/../controlador/AutoControlador.php';
+            $usuario = $_SESSION['usuario'] ?? '';
+            echo json_encode(editarAutoUsuario(
+                $usuario,
+                $input['id'] ?? 0,
+                $input['modelo'] ?? '',
+                $input['marca'] ?? '',
+                $input['conector'] ?? '',
+                $input['autonomia'] ?? 0,
+                $input['anio'] ?? 0
+            ));
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción PUT no soportada']);
         }
@@ -66,8 +117,9 @@ switch ($method) {
     case 'DELETE':
         $input = json_decode(file_get_contents("php://input"), true);
         if ($input && isset($input['accion']) && $input['accion'] === 'eliminar') {
-            $_POST = $input;
             require_once __DIR__ . '/../controlador/AutoControlador.php';
+            $usuario = $_SESSION['usuario'] ?? '';
+            echo json_encode(eliminarAutoUsuario($usuario, $input['id'] ?? 0));
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción DELETE no soportada']);
         }

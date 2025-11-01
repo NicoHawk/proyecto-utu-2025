@@ -29,8 +29,12 @@ function loginUsuario($correo, $password) {
     }
 }
 
-function registrarUsuario($username, $correo, $password, $tipo_usuario) {
+function registrarUsuario($username, $password, $tipo_usuario, $correo = '') {
     global $usuarioModel;
+    // Si no se proporciona correo, generamos uno temporal
+    if (empty($correo)) {
+        $correo = $username . '@temp.com';
+    }
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
     if ($usuarioModel->insertar($username, $correo, $passwordHash, $tipo_usuario)) {
         return [
