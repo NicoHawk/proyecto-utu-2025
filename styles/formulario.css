@@ -6,7 +6,7 @@ body {
 }
 body {
     font-family: 'Montserrat', Arial, sans-serif;
-    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
     min-height: 100vh;
     margin: 0;
     padding: 0;
@@ -39,9 +39,9 @@ body {
     }
 }
 h1 {
-    color: #00796b;
+    color: #1976d2;
     margin-bottom: 32px;
-    text-shadow: 2px 2px 8px #b2dfdb;
+    text-shadow: 2px 2px 8px #bbdefb;
     font-weight: 700;
     letter-spacing: 1px;
     font-size: 2.2em;
@@ -49,7 +49,7 @@ h1 {
 }
 form {
     margin-bottom: 22px;
-    background: #e0f2f1;
+    background: #e3f2fd;
     padding: 18px 15px 12px 15px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
@@ -66,10 +66,10 @@ input[type="email"],
 select {
     padding: 10px 12px;
     width: 100%;
-    border: 1.5px solid #00796b;
+    border: 1.5px solid #1976d2;
     border-radius: 6px;
     background-color: #ffffff;
-    color: #004d40;
+    color: #0d47a1;
     font-size: 1em;
     transition: border 0.2s;
     box-sizing: border-box;
@@ -77,12 +77,12 @@ select {
 input[type="text"]:focus,
 input[type="password"]:focus,
 input[type="email"]:focus {
-    border: 2px solid #0288d1;
+    border: 2px solid #1976d2;
     outline: none;
 }
 button {
     padding: 10px 18px;
-    background: linear-gradient(90deg, #00796b 60%, #26c6da 100%);
+    background: linear-gradient(90deg, #1976d2 60%, #26c6da 100%);
     color: white;
     border: none;
     border-radius: 6px;
@@ -93,16 +93,16 @@ button {
     transition: background 0.3s, transform 0.1s;
 }
 button:hover {
-    background: linear-gradient(90deg, #004d40 60%, #0288d1 100%);
+    background: linear-gradient(90deg, #0d47a1 60%, #0288d1 100%);
     transform: translateY(-2px) scale(1.04);
 }
 #btn-listar {
     margin-top: 14px;
-    background: linear-gradient(90deg, #0288d1 60%, #26c6da 100%);
+    background: linear-gradient(90deg, #1976d2 60%, #26c6da 100%);
     width: 100%;
 }
 #btn-listar:hover {
-    background: linear-gradient(90deg, #01579b 60%, #00bcd4 100%);
+    background: linear-gradient(90deg, #0d47a1 60%, #0288d1 100%);
 }
 ul {
     list-style-position: inside;
@@ -158,10 +158,10 @@ li button {
 }
 ::-webkit-scrollbar {
     width: 8px;
-    background: #b2dfdb;
+    background: #bbdefb;
 }
 ::-webkit-scrollbar-thumb {
-    background: #26c6da;
+    background: #64b5f6;
     border-radius: 4px;
 }
 @media (max-width: 600px) {
@@ -247,13 +247,13 @@ li button {
     gap: 6px;
 }
 .usuario-trigger:hover {
-    background: #e0f7fa;
+    background: #e3f2fd;
 }
 .icono-usuario {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #e0f7fa;
+    background: #e3f2fd;
     margin-right: 4px;
 }
 .saludo {

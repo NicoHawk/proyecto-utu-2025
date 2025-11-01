@@ -1,27 +1,24 @@
 <?php
+// Controlador orientado a modelo (sin conexiones directas aquí)
 header('Content-Type: application/json');
 
-$servername = "localhost";
-$username = "root";
-$password = "root";
-$dbname = "gestion_db"; 
-
-session_start();
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    echo json_encode(['exito' => false, 'error' => 'Error de conexión']);
-    exit;
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
+
+require_once __DIR__ . '/../modelo/Auto.php';
+
+$autoModel = new Auto();
 
 // Detectar si la petición es JSON o POST tradicional
-if ($_SERVER['CONTENT_TYPE'] === 'application/json') {
-    $data = json_decode(file_get_contents('php://input'), true);
+$contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+if ($contentType && strpos($contentType, 'application/json') !== false) {
+    $data = json_decode(file_get_contents('php://input'), true) ?? [];
 } else {
-    $data = $_POST;
+    $data = $_POST ?? [];
 }
 
-$accion = isset($data['accion']) ? $data['accion'] : '';
-
+$accion = $data['accion'] ?? '';
 
 switch ($accion) {
     case 'agregar':
@@ -29,22 +26,15 @@ switch ($accion) {
             echo json_encode(['exito' => false, 'error' => 'No autenticado']);
             break;
         }
-        $usuario = $_SESSION['usuario'];
-        $modelo = $data['modelo'];
-        $marca = $data['marca'];
-        $conector = $data['conector'];
-        $autonomia = $data['autonomia'];
-        $anio = $data['anio'];
+        $usuario   = $_SESSION['usuario'];
+        $modelo    = $data['modelo']   ?? '';
+        $marca     = $data['marca']    ?? '';
+        $conector  = $data['conector'] ?? '';
+        $autonomia = isset($data['autonomia']) ? (int)$data['autonomia'] : 0;
+        $anio      = isset($data['anio']) ? (int)$data['anio'] : 0;
 
-        $stmt = $conn->prepare("INSERT INTO autos (usuario, modelo, marca, conector, autonomia, anio) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssii", $usuario, $modelo, $marca, $conector, $autonomia, $anio);
-
-        if ($stmt->execute()) {
-            echo json_encode(['exito' => true]);
-        } else {
-            echo json_encode(['exito' => false, 'error' => $stmt->error]);
-        }
-        $stmt->close();
+        $ok = $autoModel->insertarUsuario($usuario, $modelo, $marca, $conector, $autonomia, $anio);
+        echo json_encode(['exito' => (bool)$ok, 'mensaje' => $ok ? 'Auto agregado' : 'No se pudo agregar']);
         break;
 
     case 'editar':
@@ -52,23 +42,16 @@ switch ($accion) {
             echo json_encode(['exito' => false, 'error' => 'No autenticado']);
             break;
         }
-        $usuario = $_SESSION['usuario'];
-        $id = $data['id'];
-        $modelo = $data['modelo'];
-        $marca = $data['marca'];
-        $conector = $data['conector'];
-        $autonomia = $data['autonomia'];
-        $anio = $data['anio'];
+        $usuario   = $_SESSION['usuario'];
+        $id        = isset($data['id']) ? (int)$data['id'] : 0;
+        $modelo    = $data['modelo']   ?? '';
+        $marca     = $data['marca']    ?? '';
+        $conector  = $data['conector'] ?? '';
+        $autonomia = isset($data['autonomia']) ? (int)$data['autonomia'] : 0;
+        $anio      = isset($data['anio']) ? (int)$data['anio'] : 0;
 
-        $stmt = $conn->prepare("UPDATE autos SET modelo=?, marca=?, conector=?, autonomia=?, anio=? WHERE id=? AND usuario=?");
-        $stmt->bind_param("sssiiis", $modelo, $marca, $conector, $autonomia, $anio, $id, $usuario);
-
-        if ($stmt->execute()) {
-            echo json_encode(['exito' => true]);
-        } else {
-            echo json_encode(['exito' => false, 'error' => $stmt->error]);
-        }
-        $stmt->close();
+        $ok = $autoModel->actualizarUsuario($id, $usuario, $modelo, $marca, $conector, $autonomia, $anio);
+        echo json_encode(['exito' => (bool)$ok, 'mensaje' => $ok ? 'Auto actualizado' : 'No se pudo actualizar']);
         break;
 
     case 'eliminar':
@@ -77,16 +60,9 @@ switch ($accion) {
             break;
         }
         $usuario = $_SESSION['usuario'];
-        $id = $data['id'];
-        $stmt = $conn->prepare("DELETE FROM autos WHERE id=? AND usuario=?");
-        $stmt->bind_param("is", $id, $usuario);
-
-        if ($stmt->execute()) {
-            echo json_encode(['exito' => true]);
-        } else {
-            echo json_encode(['exito' => false, 'error' => $stmt->error]);
-        }
-        $stmt->close();
+        $id      = isset($data['id']) ? (int)$data['id'] : 0;
+        $ok = $autoModel->eliminarDeUsuario($id, $usuario);
+        echo json_encode(['exito' => (bool)$ok, 'mensaje' => $ok ? 'Auto eliminado' : 'No se pudo eliminar']);
         break;
 
     case 'listar':
@@ -95,22 +71,12 @@ switch ($accion) {
             break;
         }
         $usuario = $_SESSION['usuario'];
-        $stmt = $conn->prepare("SELECT * FROM autos WHERE usuario=? ORDER BY id DESC");
-        $stmt->bind_param("s", $usuario);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $autos = [];
-        while($row = $result->fetch_assoc()) {
-            $autos[] = $row;
-        }
+        $autos = $autoModel->listarPorUsuario($usuario);
         echo json_encode($autos);
-        $stmt->close();
         break;
 
     default:
         echo json_encode(['exito' => false, 'error' => 'Acción no válida']);
         break;
 }
-
-$conn->close();
 ?>

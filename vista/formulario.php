@@ -28,6 +28,10 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                 <span class="sidebar-icon">👤</span>
                 <span class="sidebar-text">Usuarios</span>
             </li>
+            <li class="sidebar-item" data-tab="autos">
+                <span class="sidebar-icon">🚗</span>
+                <span class="sidebar-text">Autos</span>
+            </li>
             <li class="sidebar-item" data-tab="cargadores">
                 <span class="sidebar-icon">⚡</span>
                 <span class="sidebar-text">Cargadores</span>
@@ -68,6 +72,17 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
             </form>
             <button id="btn-listar">Listar Usuarios</button>
             <ul id="resultado"></ul>
+        </div>
+        <div class="tab-content" id="tab-autos" style="display:none;">
+            <h1>Gestión de Autos de Clientes</h1>
+            <div id="autosToolbar" style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin:10px 0 6px 0;">
+                <label for="ordenAutos" style="font-size:0.95em; color:#555;">Orden:</label>
+                <select id="ordenAutos" style="padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; color:#333;">
+                    <option value="asc" selected>ID ascendente (1 → N)</option>
+                    <option value="desc">ID descendente (N → 1)</option>
+                </select>
+            </div>
+            <div id="listaAutos" style="margin-top: 20px;"></div>
         </div>
         <div class="tab-content" id="tab-cargadores" style="display:none;">
             <h2 style="margin-bottom: 10px; color:#1976d2; text-align:center;">Mapa de cargadores</h2>
@@ -415,9 +430,183 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
     // Listar usuarios al cargar la página
     listar();
 
+    // Función para listar todos los autos
+    function listarAutos(orden) {
+        // Tomamos el orden desde el selector (por defecto asc)
+        const ordenSel = orden || (document.getElementById('ordenAutos') ? document.getElementById('ordenAutos').value : 'asc');
+        // Forzamos refresco con timestamp
+        const url = `../api/autos_admin.php?accion=listar&orden=${encodeURIComponent(ordenSel)}&_=${Date.now()}`;
+        fetch(url)
+            .then(res => res.json())
+            .then(autos => {
+                const container = document.getElementById('listaAutos');
+                if (autos.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#666;">No hay autos registrados.</p>';
+                    return;
+                }
+
+                let html = '<table style="width:100%; border-collapse: collapse; margin-top:10px;">';
+                html += '<thead><tr style="background:#1976d2; color:#fff;">';
+                html += '<th style="padding:12px; text-align:left;">ID</th>';
+                html += '<th style="padding:12px; text-align:left;">Usuario</th>';
+                html += '<th style="padding:12px; text-align:left;">Modelo</th>';
+                html += '<th style="padding:12px; text-align:left;">Marca</th>';
+                html += '<th style="padding:12px; text-align:left;">Conector</th>';
+                html += '<th style="padding:12px; text-align:left;">Autonomía (km)</th>';
+                html += '<th style="padding:12px; text-align:left;">Año</th>';
+                html += '<th style="padding:12px; text-align:center;">Acciones</th>';
+                html += '</tr></thead><tbody>';
+
+                autos.forEach(auto => {
+                    html += `<tr style="border-bottom:1px solid #ddd;">
+                        <td style="padding:10px;">${auto.id}</td>
+                        <td style="padding:10px;"><strong>${auto.usuario}</strong></td>
+                        <td style="padding:10px;">
+                            <span id="modelo-${auto.id}">${auto.modelo}</span>
+                            <input type="text" id="input-modelo-${auto.id}" value="${auto.modelo}" style="display:none; width:100%; padding:5px;">
+                        </td>
+                        <td style="padding:10px;">
+                            <span id="marca-${auto.id}">${auto.marca}</span>
+                            <input type="text" id="input-marca-${auto.id}" value="${auto.marca}" style="display:none; width:100%; padding:5px;">
+                        </td>
+                        <td style="padding:10px;">
+                            <span id="conector-${auto.id}">${auto.conector}</span>
+                            <input type="text" id="input-conector-${auto.id}" value="${auto.conector}" style="display:none; width:100%; padding:5px;">
+                        </td>
+                        <td style="padding:10px;">
+                            <span id="autonomia-${auto.id}">${auto.autonomia}</span>
+                            <input type="number" id="input-autonomia-${auto.id}" value="${auto.autonomia}" style="display:none; width:80px; padding:5px;">
+                        </td>
+                        <td style="padding:10px;">
+                            <span id="anio-${auto.id}">${auto.anio}</span>
+                            <input type="number" id="input-anio-${auto.id}" value="${auto.anio}" style="display:none; width:80px; padding:5px;">
+                        </td>
+                        <td style="padding:10px; text-align:center;">
+                            <button onclick="editarAuto(${auto.id})" id="btn-editar-${auto.id}" style="background:#2196F3; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; margin-right:5px;">Editar</button>
+                            <button onclick="guardarAuto(${auto.id})" id="btn-guardar-${auto.id}" style="display:none; background:#4CAF50; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; margin-right:5px;">Guardar</button>
+                            <button onclick="cancelarEditarAuto(${auto.id})" id="btn-cancelar-${auto.id}" style="display:none; background:#9E9E9E; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; margin-right:5px;">Cancelar</button>
+                            <button onclick="eliminarAuto(${auto.id})" style="background:#f44336; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Eliminar</button>
+                        </td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error al cargar autos:', err);
+                document.getElementById('listaAutos').innerHTML = '<p style="color:#f44336;">Error al cargar los autos.</p>';
+            });
+    }
+
+    // Función para editar auto
+    window.editarAuto = function(id) {
+        document.getElementById(`modelo-${id}`).style.display = 'none';
+        document.getElementById(`marca-${id}`).style.display = 'none';
+        document.getElementById(`conector-${id}`).style.display = 'none';
+        document.getElementById(`autonomia-${id}`).style.display = 'none';
+        document.getElementById(`anio-${id}`).style.display = 'none';
+
+        document.getElementById(`input-modelo-${id}`).style.display = 'inline-block';
+        document.getElementById(`input-marca-${id}`).style.display = 'inline-block';
+        document.getElementById(`input-conector-${id}`).style.display = 'inline-block';
+        document.getElementById(`input-autonomia-${id}`).style.display = 'inline-block';
+        document.getElementById(`input-anio-${id}`).style.display = 'inline-block';
+
+        document.getElementById(`btn-editar-${id}`).style.display = 'none';
+        document.getElementById(`btn-guardar-${id}`).style.display = 'inline-block';
+        document.getElementById(`btn-cancelar-${id}`).style.display = 'inline-block';
+    }
+
+    // Función para cancelar edición
+    window.cancelarEditarAuto = function(id) {
+        listarAutos();
+    }
+
+    // Función para guardar auto
+    window.guardarAuto = function(id) {
+        const modelo = document.getElementById(`input-modelo-${id}`).value;
+        const marca = document.getElementById(`input-marca-${id}`).value;
+        const conector = document.getElementById(`input-conector-${id}`).value;
+        const autonomia = document.getElementById(`input-autonomia-${id}`).value;
+        const anio = document.getElementById(`input-anio-${id}`).value;
+
+        fetch('../api/autos_admin.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                accion: 'editar',
+                id: id,
+                modelo: modelo,
+                marca: marca,
+                conector: conector,
+                autonomia: autonomia,
+                anio: anio
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.exito) {
+                alert('Auto actualizado correctamente');
+                listarAutos();
+            } else {
+                alert('Error al actualizar: ' + (data.mensaje || data.error));
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Error de conexión');
+        });
+    }
+
+    // Función para eliminar auto
+    window.eliminarAuto = function(id) {
+        if (!confirm('¿Está seguro de eliminar este auto?')) return;
+
+        fetch('../api/autos_admin.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                accion: 'eliminar',
+                id: id
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.exito) {
+                alert('Auto eliminado correctamente');
+                listarAutos();
+            } else {
+                alert('Error al eliminar: ' + (data.mensaje || data.error));
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Error de conexión');
+        });
+    }
+
+    // Cargar autos cuando se abre la pestaña
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const tab = this.dataset.tab;
+            if (tab === 'autos') {
+                listarAutos();
+            }
+        });
+    });
+
+    // Cambiar orden desde el selector
+    (function(){
+        const sel = document.getElementById('ordenAutos');
+        if (sel) {
+            sel.addEventListener('change', () => listarAutos(sel.value));
+        }
+    })();
+
     // Botón para cerrar sesión
     document.getElementById("btn-cerrar-sesion").onclick = function () {
-    window.location.href = "logout.php";
+        window.location.href = "logout.php";
     };
     </script>
 </body>
