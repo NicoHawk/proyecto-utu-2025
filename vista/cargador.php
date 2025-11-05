@@ -32,6 +32,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
         <div id="map"></div>
         <form id="formCargador">
             <input type="text" id="nombreCargador" placeholder="Nombre del cargador" required>
+            <textarea id="descripcionCargador" placeholder="Descripción (opcional)" rows="2" style="width: 100%; padding: 8px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;"></textarea>
             <button type="submit" disabled>Agregar cargador</button>
             <span id="ubicacionSeleccionada" style="font-size: 0.9em; color: #555;"></span>
         </form>
@@ -116,6 +117,9 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
         cargadores.forEach(cargador => {
             html += `<li style='margin-bottom:10px;'>`;
             html += `<strong>${cargador.nombre}</strong>`;
+            if (cargador.descripcion) {
+                html += `<br><small style='color:#666;'>${cargador.descripcion}</small>`;
+            }
             html += `<button class='btn-ver-mapa' onclick="centrarEnCargador(${cargador.id})" style='margin-left:10px;'>Ver en mapa</button>`;
             html += `<button class='btn-eliminar' onclick="eliminarCargador(${cargador.id})" style='margin-left:10px;'>Eliminar</button>`;
             html += `</li>`;
@@ -141,12 +145,14 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
             e.preventDefault();
             if (ubicacionTemporal) {
                 const nombre = document.getElementById("nombreCargador").value;
+                const descripcion = document.getElementById("descripcionCargador").value;
                 fetch('../api/cargadores.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         accion: 'agregar',
                         nombre: nombre,
+                        descripcion: descripcion,
                         latitud: ubicacionTemporal.lat(),
                         longitud: ubicacionTemporal.lng()
                     })
@@ -157,7 +163,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
                         // Mensaje de éxito
                         mostrarMensaje('Cargador agregado exitosamente', 'exito');
                         // Actualizar lista y mapa instantáneamente
-                        fetch('api/cargadores.php?accion=listar', {
+                        fetch('../api/cargadores.php?accion=listar', {
                             method: 'GET',
                             headers: { 'Accept': 'application/json' }
                         })

@@ -83,9 +83,18 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                     <select id="nuevoAutoUsuario" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
                         <option value="">Seleccionar Usuario</option>
                     </select>
-                    <input type="text" id="nuevoAutoModelo" placeholder="Modelo" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
                     <input type="text" id="nuevoAutoMarca" placeholder="Marca" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
-                    <input type="text" id="nuevoAutoConector" placeholder="Conector (ej: Tipo 1, Tipo 2)" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
+                    <input type="text" id="nuevoAutoModelo" placeholder="Modelo" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
+                    <select id="nuevoAutoConector" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
+                        <option value="">Tipo de conector</option>
+                        <option value="Tipo 1">Tipo 1 (SAE J1772)</option>
+                        <option value="Tipo 2">Tipo 2 (Mennekes)</option>
+                        <option value="CCS Combo 1">CCS Combo 1</option>
+                        <option value="CCS Combo 2">CCS Combo 2</option>
+                        <option value="CHAdeMO">CHAdeMO</option>
+                        <option value="Tesla (NACS)">Tesla (NACS)</option>
+                        <option value="GB/T">GB/T</option>
+                    </select>
                     <input type="number" id="nuevoAutoAutonomia" placeholder="Autonomía (km)" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
                     <input type="number" id="nuevoAutoAnio" placeholder="Año" required style="padding:8px; border-radius:4px; border:1px solid #cbd5e1;">
                     <button type="submit" style="background:#4CAF50; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:bold;">Agregar Auto</button>
@@ -259,6 +268,18 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         }
     };
 
+    // Función para mostrar mensajes toast
+    function mostrarMensaje(texto, tipo) {
+        let toast = document.createElement('div');
+        toast.className = 'mensaje-toast ' + (tipo === 'exito' ? 'exito' : 'error');
+        toast.textContent = texto;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }, 2500);
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         const form = document.getElementById("formCargador");
         form.addEventListener("submit", function(e) {
@@ -274,6 +295,8 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                 .then(res => res.json())
                 .then(res => {
                     if(res.exito){
+                        // Mostrar mensaje de éxito
+                        mostrarMensaje('Cargador agregado correctamente', 'exito');
                         // Recargar lista y marcadores
                         fetch('../api/cargadores.php')
                             .then(res => res.json())
@@ -286,6 +309,8 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                                     agregarCargador(cargador.id, cargador.nombre, {lat: parseFloat(cargador.latitud), lng: parseFloat(cargador.longitud)});
                                 });
                             });
+                    } else {
+                        mostrarMensaje(res.mensaje || 'Error al agregar el cargador', 'error');
                     }
                 });
                 form.reset();
@@ -323,7 +348,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         })
             .then(res => res.json())
             .then(data => {
-                alert(data.mensaje);
+                mostrarMensaje(data.mensaje, data.mensaje.toLowerCase().includes('error') ? 'error' : 'exito');
                 // Limpiar campos del formulario
                 document.getElementById("nombre").value = "";
                 document.getElementById("password").value = "";
@@ -393,7 +418,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         })
             .then(res => res.json())
             .then(data => {
-                alert(data.mensaje);
+                mostrarMensaje(data.mensaje, data.mensaje.toLowerCase().includes('error') ? 'error' : 'exito');
                 listar();
             });
     }
@@ -407,7 +432,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
             })
                 .then(res => res.json())
                 .then(data => {
-                    alert(data.mensaje);
+                    mostrarMensaje(data.mensaje, data.mensaje.toLowerCase().includes('error') ? 'error' : 'exito');
                     listar();
                 });
         }
@@ -424,7 +449,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
             .then(res => res.json())
             .then(res => {
                 if (res.exito) {
-                    alert(res.mensaje || "Cargador eliminado");
+                    mostrarMensaje('Cargador eliminado correctamente', 'exito');
                     // Recargar lista y marcadores
                     fetch('../api/cargadores.php')
                         .then(res => res.json())
@@ -442,15 +467,31 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                             });
                         });
                 } else {
-                    alert(res.mensaje || "No se pudo eliminar el cargador.");
+                    mostrarMensaje(res.mensaje || 'No se pudo eliminar el cargador', 'error');
                 }
             })
-            .catch(() => alert("Error de conexión al eliminar el cargador."));
+            .catch(() => mostrarMensaje('Error de conexión al eliminar el cargador', 'error'));
         }
     }
 
     // Listar usuarios al cargar la página
     listar();
+
+    // Helper: opciones del selector de conector (edición inline)
+    function opcionesConectorHTML(seleccionado) {
+        const opciones = [
+            { value: 'Tipo 1', label: 'Tipo 1 (SAE J1772)' },
+            { value: 'Tipo 2', label: 'Tipo 2 (Mennekes)' },
+            { value: 'CCS Combo 1', label: 'CCS Combo 1' },
+            { value: 'CCS Combo 2', label: 'CCS Combo 2' },
+            { value: 'CHAdeMO', label: 'CHAdeMO' },
+            { value: 'Tesla (NACS)', label: 'Tesla (NACS)' },
+            { value: 'GB/T', label: 'GB/T' }
+        ];
+        return opciones
+            .map(o => `<option value="${o.value}" ${o.value === seleccionado ? 'selected' : ''}>${o.label}</option>`)
+            .join('');
+    }
 
     // Función para listar todos los autos
     function listarAutos(orden) {
@@ -471,8 +512,8 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                 html += '<thead><tr style="background:#1976d2; color:#fff;">';
                 html += '<th style="padding:12px; text-align:left;">ID</th>';
                 html += '<th style="padding:12px; text-align:left;">Usuario</th>';
-                html += '<th style="padding:12px; text-align:left;">Modelo</th>';
                 html += '<th style="padding:12px; text-align:left;">Marca</th>';
+                html += '<th style="padding:12px; text-align:left;">Modelo</th>';
                 html += '<th style="padding:12px; text-align:left;">Conector</th>';
                 html += '<th style="padding:12px; text-align:left;">Autonomía (km)</th>';
                 html += '<th style="padding:12px; text-align:left;">Año</th>';
@@ -484,16 +525,18 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                         <td style="padding:10px;">${auto.id}</td>
                         <td style="padding:10px;"><strong>${auto.usuario}</strong></td>
                         <td style="padding:10px;">
-                            <span id="modelo-${auto.id}">${auto.modelo}</span>
-                            <input type="text" id="input-modelo-${auto.id}" value="${auto.modelo}" style="display:none; width:100%; padding:5px;">
-                        </td>
-                        <td style="padding:10px;">
                             <span id="marca-${auto.id}">${auto.marca}</span>
                             <input type="text" id="input-marca-${auto.id}" value="${auto.marca}" style="display:none; width:100%; padding:5px;">
                         </td>
                         <td style="padding:10px;">
+                            <span id="modelo-${auto.id}">${auto.modelo}</span>
+                            <input type="text" id="input-modelo-${auto.id}" value="${auto.modelo}" style="display:none; width:100%; padding:5px;">
+                        </td>
+                        <td style="padding:10px;">
                             <span id="conector-${auto.id}">${auto.conector}</span>
-                            <input type="text" id="input-conector-${auto.id}" value="${auto.conector}" style="display:none; width:100%; padding:5px;">
+                            <select id="input-conector-${auto.id}" style="display:none; width:100%; padding:5px;">
+                                ${opcionesConectorHTML(auto.conector)}
+                            </select>
                         </td>
                         <td style="padding:10px;">
                             <span id="autonomia-${auto.id}">${auto.autonomia}</span>
@@ -569,15 +612,15 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         .then(res => res.json())
         .then(data => {
             if (data.exito) {
-                alert('Auto actualizado correctamente');
+                mostrarMensaje('Auto actualizado correctamente', 'exito');
                 listarAutos();
             } else {
-                alert('Error al actualizar: ' + (data.mensaje || data.error));
+                mostrarMensaje('Error al actualizar: ' + (data.mensaje || data.error), 'error');
             }
         })
         .catch(err => {
             console.error('Error:', err);
-            alert('Error de conexión');
+            mostrarMensaje('Error de conexión', 'error');
         });
     }
 
@@ -596,15 +639,15 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         .then(res => res.json())
         .then(data => {
             if (data.exito) {
-                alert('Auto eliminado correctamente');
+                mostrarMensaje('Auto eliminado correctamente', 'exito');
                 listarAutos();
             } else {
-                alert('Error al eliminar: ' + (data.mensaje || data.error));
+                mostrarMensaje('Error al eliminar: ' + (data.mensaje || data.error), 'error');
             }
         })
         .catch(err => {
             console.error('Error:', err);
-            alert('Error de conexión');
+            mostrarMensaje('Error de conexión', 'error');
         });
     }
 
@@ -665,18 +708,18 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         .then(res => res.json())
         .then(data => {
             if (data.exito) {
-                alert('Auto agregado correctamente');
+                mostrarMensaje('Auto agregado correctamente', 'exito');
                 // Limpiar formulario
                 document.getElementById('formAgregarAuto').reset();
                 // Recargar lista
                 listarAutos();
             } else {
-                alert('Error al agregar: ' + (data.mensaje || data.error));
+                mostrarMensaje('Error al agregar: ' + (data.mensaje || data.error), 'error');
             }
         })
         .catch(err => {
             console.error('Error:', err);
-            alert('Error de conexión');
+            mostrarMensaje('Error de conexión', 'error');
         });
     });
 

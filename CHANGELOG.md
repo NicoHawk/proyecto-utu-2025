@@ -1,11 +1,520 @@
 # 📋 Changelog - Sistema de Gestión de Autos Eléctricos
 
+## Versión 1.6.0 - 5 de Noviembre de 2025
+
+### 🎯 Cambios Principales
+
+#### 🏗️ Refactorización Completa de Arquitectura MVC
+- **Patrón MVC implementado al 100%**
+  - Separación estricta de responsabilidades entre Modelo, Vista, Controlador y API
+  - Eliminación de violaciones del patrón MVC en toda la aplicación
+  - Documentación completa de la arquitectura en `ARQUITECTURA.md`
+  - Nuevo documento `CORRECIONES_MVC.md` detallando todos los cambios
+
+#### 🔧 Corrección del ViajeControlador
+- **Controlador ViajeControlador.php refactorizado**
+  - ❌ **Antes:** Mezclaba lógica de API (session_start, header, echo)
+  - ✅ **Ahora:** Solo contiene funciones puras de lógica de negocio
+  - Funciones nuevas:
+    - `agregarViaje($usuario, $origen, $destino, $fecha, $distancia_km, $observaciones)`
+    - `listarViajesUsuario($usuario)`
+  - Retorna arrays estructurados en lugar de hacer echo directo
+  - Sin acceso a `$_POST`, `$_SESSION` o `$_GET` en las funciones principales
+
+#### 🚀 API de Viajes Actualizada
+- **api/viajes.php completamente renovada**
+  - Ahora maneja correctamente HTTP requests/responses
+  - Soporte para GET y POST con JSON y form-data
+  - Llamadas correctas a funciones del controlador
+  - Endpoints:
+    - `GET ?accion=listar`: Lista viajes del usuario autenticado
+    - `POST accion=agregar`: Crea nuevo viaje con validación
+  - Headers CORS configurados correctamente
+
+#### 🔌 Limpieza de API Cargadores
+- **api/cargadores.php optimizada**
+  - Eliminada variable `$conn` innecesaria (no se usaba)
+  - Removido `require_once __DIR__ . '/../db.php'`
+  - Ahora solo usa el CargadorControlador como debe ser
+  - Código más limpio y mantenible
+
+#### 🎨 Selector de Conectores Estandarizado
+- **Campo Tipo de Conector en todas las vistas**
+  - Vista Cliente (`vista/cliente.php`):
+    - Input text reemplazado por `<select>` con opciones estándar
+  - Vista Admin (`vista/formulario.php`):
+    - Formulario de agregar: Select con opciones estándar
+    - Edición inline: Select dinámico con función helper `opcionesConectorHTML()`
+  - **Tipos de conector disponibles:**
+    - Tipo 1 (SAE J1772)
+    - Tipo 2 (Mennekes)
+    - CCS Combo 1
+    - CCS Combo 2
+    - CHAdeMO
+    - Tesla (NACS)
+    - GB/T
+  - Previene errores de tipeo y mantiene consistencia de datos
+
+#### 🗄️ Base de Datos: Campo Conector con ENUM
+- **Migración de VARCHAR a ENUM para `autos.conector`**
+  - Enforcement de integridad de datos a nivel de base de datos
+  - MySQL rechaza automáticamente valores no válidos
+  - Mayor performance que VARCHAR
+  - Script SQL proporcionado para migración segura
+  - Valor por defecto: 'Tipo 2'
+
+#### 📊 Orden de Columnas Actualizado
+- **Tabla de Autos en Vista Cliente**
+  - ❌ **Antes:** ID | Modelo | Marca | Tipo de Conector | Autonomía | Año | Acciones
+  - ✅ **Ahora:** ID | Marca | Modelo | Tipo de Conector | Autonomía | Año | Acciones
+  - Orden consistente con panel de administración
+  - JavaScript de edición inline actualizado para nuevo orden
+
+---
+
+### 🔧 Cambios Técnicos Detallados
+
+#### Arquitectura MVC Corregida
+
+**Diagrama actualizado:**
+```
+┌─────────────────────────────────────────────────┐
+│                   VISTA                         │
+│  (cliente.php, formulario.php, cargador.php)   │
+│              JavaScript + HTML                  │
+└─────────────────┬───────────────────────────────┘
+                  │ HTTP Requests (fetch/AJAX)
+                  ↓
+┌─────────────────────────────────────────────────┐
+│                    API                          │
+│  (autos.php, cargadores.php, viajes.php)       │
+│  ✅ Valida requests                             │
+│  ✅ Verifica permisos/sesiones                  │
+│  ✅ Llama funciones del CONTROLADOR             │
+│  ✅ Retorna JSON                                │
+│  ❌ NO hace queries SQL                         │
+└─────────────────┬───────────────────────────────┘
+                  │ Llamadas a funciones
+                  ↓
+┌─────────────────────────────────────────────────┐
+│               CONTROLADOR                       │
+│  (ViajeControlador, AutoControlador, etc.)     │
+│  ✅ Lógica de negocio                           │
+│  ✅ Validaciones de datos                       │
+│  ✅ Instancia y usa MODELOS                     │
+│  ✅ Retorna arrays/datos                        │
+│  ❌ NO hace queries SQL directas                │
+│  ❌ NO hace echo/print                          │
+└─────────────────┬───────────────────────────────┘
+                  │ Usa métodos
+                  ↓
+┌─────────────────────────────────────────────────┐
+│                    MODELO                       │
+│       (Viaje, Auto, Cargador, Usuario)         │
+│  ✅ Interacción con base de datos               │
+│  ✅ Queries SQL (PDO)                           │
+│  ✅ Métodos CRUD                                │
+│  ❌ NO contiene lógica de negocio               │
+└─────────────────┬───────────────────────────────┘
+                  │ PDO
+                  ↓
+┌─────────────────────────────────────────────────┐
+│              BASE DE DATOS MySQL                │
+└─────────────────────────────────────────────────┘
+```
+
+#### Controlador ViajeControlador.php
+
+**Antes (❌ Incorrecto):**
+```php
+<?php
+session_start(); // ← Mezclaba lógica de API
+header('Content-Type: application/json'); // ← Headers en controlador
+
+$viajeModel = new Viaje();
+
+function agregarViaje($viajeModel) {
+    $usuario = $_SESSION['usuario'] ?? ''; // ← Acceso directo a sesión
+    // ...
+    echo json_encode(['success' => $ok]); // ← Echo en controlador
+}
+
+$accion = $_POST['accion'] ?? ''; // ← Lectura directa de POST
+switch ($accion) {
+    case 'agregar':
+        agregarViaje($viajeModel);
+        break;
+}
+?>
+```
+
+**Ahora (✅ Correcto):**
+```php
+<?php
+require_once __DIR__ . '/../modelo/Viaje.php';
+
+// Funciones puras del controlador
+function agregarViaje($usuario, $origen, $destino, $fecha, $distancia_km = 0, $observaciones = null) {
+    if (empty($usuario) || empty($origen) || empty($destino) || empty($fecha)) {
+        return ['exito' => false, 'mensaje' => 'Faltan datos requeridos'];
+    }
+    $viajeModel = new Viaje();
+    $ok = $viajeModel->insertar($usuario, $origen, $destino, $fecha, $distancia_km, $observaciones);
+    return ['exito' => (bool)$ok, 'mensaje' => $ok ? 'Viaje registrado' : 'Error al registrar viaje'];
+}
+
+function listarViajesUsuario($usuario) {
+    if (empty($usuario)) {
+        return [];
+    }
+    $viajeModel = new Viaje();
+    return $viajeModel->listarPorUsuario($usuario);
+}
+?>
+```
+
+#### API viajes.php
+
+**Ahora maneja correctamente la capa HTTP:**
+```php
+<?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Content-Type: application/json');
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/../controlador/ViajeControlador.php';
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+switch ($method) {
+    case 'GET':
+        $usuario = $_SESSION['usuario'] ?? '';
+        $viajes = listarViajesUsuario($usuario); // ← Llama al controlador
+        echo json_encode($viajes);
+        break;
+        
+    case 'POST':
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+        $usuario = $_SESSION['usuario'] ?? '';
+        $resultado = agregarViaje( // ← Llama al controlador con parámetros
+            $usuario,
+            $input['origen'] ?? '',
+            $input['destino'] ?? '',
+            $input['fecha'] ?? date('Y-m-d H:i:s'),
+            $input['distancia_km'] ?? 0,
+            $input['observaciones'] ?? null
+        );
+        echo json_encode($resultado);
+        break;
+}
+?>
+```
+
+#### Vista formulario.php - Selector de Conectores
+
+**Helper JavaScript agregado:**
+```javascript
+// Helper: opciones del selector de conector (edición inline)
+function opcionesConectorHTML(seleccionado) {
+    const opciones = [
+        { value: 'Tipo 1', label: 'Tipo 1 (SAE J1772)' },
+        { value: 'Tipo 2', label: 'Tipo 2 (Mennekes)' },
+        { value: 'CCS Combo 1', label: 'CCS Combo 1' },
+        { value: 'CCS Combo 2', label: 'CCS Combo 2' },
+        { value: 'CHAdeMO', label: 'CHAdeMO' },
+        { value: 'Tesla (NACS)', label: 'Tesla (NACS)' },
+        { value: 'GB/T', label: 'GB/T' }
+    ];
+    return opciones
+        .map(o => `<option value="${o.value}" ${o.value === seleccionado ? 'selected' : ''}>${o.label}</option>`)
+        .join('');
+}
+```
+
+**Tabla de autos con select en edición:**
+```javascript
+html += `<td style="padding:10px;">
+    <span id="conector-${auto.id}">${auto.conector}</span>
+    <select id="input-conector-${auto.id}" style="display:none; width:100%; padding:5px;">
+        ${opcionesConectorHTML(auto.conector)}
+    </select>
+</td>`;
+```
+
+#### Vista cliente.php - Actualizada
+
+**Orden de columnas corregido:**
+```javascript
+// ✅ AHORA: Marca antes de Modelo
+let html = "<table><tr><th>ID</th><th>Marca</th><th>Modelo</th><th>Tipo de Conector</th>...";
+autos.forEach(auto => {
+    html += `<tr data-id="${auto.id}">
+        <td>${auto.id}</td>
+        <td class="editable" data-campo="marca">${auto.marca}</td>
+        <td class="editable" data-campo="modelo">${auto.modelo}</td>
+        ...
+    </tr>`;
+});
+```
+
+**Función de guardado actualizada:**
+```javascript
+const datos = {
+    accion: 'editar',
+    id: id,
+    marca: inputs[0].value,  // ← Marca primero
+    modelo: inputs[1].value, // ← Modelo segundo
+    conector: inputs[2].value,
+    autonomia: inputs[3].value,
+    anio: inputs[4].value
+};
+```
+
+---
+
+### 📦 Archivos Nuevos
+
+- `ARQUITECTURA.md` - Documentación completa del patrón MVC implementado
+
+### 📝 Archivos Modificados
+
+**Controladores:**
+- `controlador/ViajeControlador.php` ⚙️
+  - Refactorizado completamente
+  - Eliminada lógica de API
+  - Funciones puras de negocio
+
+**APIs:**
+- `api/viajes.php` ⚙️
+  - Actualizada para usar correctamente el controlador
+  - Manejo apropiado de HTTP/JSON
+- `api/cargadores.php` ⚙️
+  - Limpieza de código innecesario
+  - Eliminada variable `$conn`
+
+**Vistas:**
+- `vista/cliente.php`
+  - Selector de conectores en formulario de agregar auto
+  - Orden de columnas: ID | Marca | Modelo | ...
+  - JavaScript de edición actualizado
+- `vista/formulario.php`
+  - Selector de conectores en formulario de agregar
+  - Selector de conectores en edición inline
+  - Función helper `opcionesConectorHTML()`
+
+---
+
+### 🐛 Correcciones de Bugs
+
+1. **ViajeControlador violaba MVC**
+   - Mezclaba responsabilidades de API y controlador
+   - Solución: Refactorización completa siguiendo patrón MVC
+
+2. **API viajes no funcionaba correctamente**
+   - Dependía de estructura incorrecta del controlador
+   - Solución: Actualizada para usar nuevas funciones del controlador
+
+3. **Variable innecesaria en api/cargadores**
+   - `$conn` declarada pero nunca usada
+   - Solución: Eliminada junto con require innecesario
+
+4. **Inconsistencia en tipos de conector**
+   - Usuarios podían escribir cualquier valor
+   - Solución: Select con opciones estándar en todas las vistas
+
+5. **Orden de columnas inconsistente**
+   - Vista cliente mostraba Modelo antes que Marca
+   - Solución: Reordenamiento de columnas y actualización de JavaScript
+
+---
+
+### ✨ Mejoras de UX
+
+1. **Selector de conectores estandarizado**
+   - Previene errores de tipeo
+   - Opciones claras con nombres descriptivos
+   - Consistencia de datos garantizada
+
+2. **Orden de columnas lógico**
+   - Marca → Modelo (orden natural)
+   - Consistente entre vista cliente y admin
+
+3. **Arquitectura más mantenible**
+   - Bugs más fáciles de encontrar y corregir
+   - Código más limpio y organizado
+   - Mejor rendimiento general
+
+---
+
+### 📝 Notas de Migración
+
+#### Script SQL para ENUM en `autos.conector`
+
+**⚠️ IMPORTANTE: Hacer backup antes de ejecutar**
+
+```sql
+-- 1. Verificar datos actuales
+SELECT DISTINCT conector FROM autos;
+
+-- 2. (Opcional) Actualizar valores no estándar
+-- UPDATE autos SET conector = 'Tipo 2' WHERE conector NOT IN ('Tipo 1', 'Tipo 2', 'CCS Combo 1', 'CCS Combo 2', 'CHAdeMO', 'Tesla (NACS)', 'GB/T');
+
+-- 3. Aplicar ENUM
+ALTER TABLE autos 
+MODIFY COLUMN conector ENUM(
+    'Tipo 1',
+    'Tipo 2',
+    'CCS Combo 1',
+    'CCS Combo 2',
+    'CHAdeMO',
+    'Tesla (NACS)',
+    'GB/T'
+) NOT NULL DEFAULT 'Tipo 2';
+
+-- 4. Verificar cambio
+DESCRIBE autos;
+```
+
+**Nota:** La migración a ENUM es **opcional** pero **recomendada** para mayor integridad de datos.
+
+---
+
+### 🚀 Beneficios de esta Versión
+
+1. **Arquitectura MVC Pura**
+   - Separación clara de responsabilidades
+   - Código más testeable y mantenible
+   - Siguiendo mejores prácticas de desarrollo
+
+2. **Mayor Integridad de Datos**
+   - Campo conector con valores validados
+   - Enforcement a nivel de BD (si se usa ENUM)
+   - Consistencia garantizada en UI
+
+3. **Código más Limpio**
+   - Eliminación de código innecesario
+   - Funciones con propósito único
+   - Mejor organización general
+
+4. **Mejor Performance**
+   - ENUM más eficiente que VARCHAR
+   - Menos validaciones en runtime
+   - Queries optimizadas
+
+5. **Documentación Completa**
+   - `ARQUITECTURA.md` explica todo el patrón
+   - Ejemplos de código para cada capa
+   - Guía clara para futuros desarrollos
+
+---
+
+### 🎓 Documentación Nueva
+
+- **ARQUITECTURA.md**
+  - Diagrama completo de capas MVC
+  - Responsabilidades de cada capa
+  - Qué DEBE y NO DEBE contener cada archivo
+  - Ejemplos de código correcto e incorrecto
+  - Flujo completo de una operación
+  - Buenas prácticas implementadas
+  - Tabla resumen de archivos por responsabilidad
+
+---
+
+### 🔍 Checklist de Cumplimiento MVC
+
+#### API Layer ✅
+- [x] Solo maneja HTTP requests/responses
+- [x] Valida permisos y sesiones
+- [x] Llama funciones del Controlador
+- [x] Retorna JSON
+- [x] NO hace queries SQL
+- [x] NO instancia Modelos directamente
+
+#### Controlador Layer ✅
+- [x] Contiene lógica de negocio
+- [x] Valida datos
+- [x] Instancia y usa Modelos
+- [x] Retorna arrays/datos procesados
+- [x] NO hace queries SQL directas
+- [x] NO hace echo/print
+- [x] NO accede a $_POST/$_GET/$_SESSION directamente
+
+#### Modelo Layer ✅
+- [x] Interactúa con la base de datos
+- [x] Métodos CRUD
+- [x] Retorna datos de DB
+- [x] NO contiene lógica de negocio
+- [x] NO maneja sesiones
+
+---
+
+### 📞 Soporte
+
+Para reportar bugs o sugerir mejoras, contactar al equipo de desarrollo.
+
+**Desarrollado por:** ShonosTech  
+**Fecha de Release:** 5 de Noviembre de 2025  
+**Versión Anterior:** 1.5.0  
+**Versión Actual:** 1.6.0
+
+---
+
 ## Versión 1.5.0 - 1 de Noviembre de 2025
 
 ### 🎯 Cambios Principales
 
-#### 🧭 Panel de Cliente con pestañas (Autos/Viajes)
-- Rediseño del panel de cliente con sidebar fija y navegación por pestañas (Autos/Viajes).
+#### 🗺️ Sistema Completo de Planificación de Viajes
+- **Planificador interactivo con mapa Leaflet**
+  - Ingreso de origen y destino mediante dirección de texto
+  - Selector de auto del usuario con información de autonomía
+  - Radio configurable (1-50 km) para buscar estaciones cercanas a la ruta
+  - Geocodificación automática con Nominatim (OpenStreetMap)
+  - Visualización de ruta aproximada (línea recta) en mapa
+  - Filtrado inteligente de estaciones cercanas a la ruta
+  - **Recomendación automática de paradas** según autonomía del vehículo
+  - Marcadores en mapa con información y acciones directas
+  - Panel de estaciones con tabla detallada (nombre, tipo, estado, coords, recomendada)
+
+#### 🔌 Estaciones de Carga - Información Detallada
+- **Backend extendido para datos completos de estaciones**
+  - Nuevos campos en tabla `cargadores`: `tipo`, `estado`, `potencia_kw`, `conectores`
+  - Modelo actualizado con soporte completo para nuevos campos
+  - API modificada para exponer y recibir toda la información
+  - Estados posibles: `disponible`, `en_uso`, `fuera_de_servicio`
+  - Tipos de cargador: Tipo 1, Tipo 2, CCS, CHAdeMO, Tesla Supercharger, etc.
+- **Modal de detalle de estación**
+  - Vista completa con nombre, coordenadas, tipo, estado, descripción
+  - Botón directo para reservar desde el detalle
+  - Diseño responsive y accesible
+
+#### 📅 Sistema de Reservas con Calendar/Time Picker
+- **Modal de reserva con calendario y hora**
+  - Selector de fecha (date picker)
+  - Selector de hora de inicio (time picker)
+  - Duración configurable en minutos (múltiplos de 15)
+  - Validación de campos antes de enviar
+  - Cálculo automático de hora de fin
+  - Envío JSON al backend con validación de solapamientos
+- **Gestión de reservas del usuario**
+  - Tabla "Mis reservas" con todas las reservas activas
+  - Información: Estación, Inicio, Fin, Estado
+  - Botón de cancelar para reservas no canceladas
+  - Actualización automática tras crear/cancelar
+
+#### 📋 Historial de Cargas y Viajes
+- **Nueva pestaña Historial**
+  - Muestra reservas pasadas y completadas (historial de cargas)
+  - Tabla con estación, inicio, fin, estado
+  - Filtrado automático de reservas pasadas
+  - Comentarios TODO para futuro: tabla de viajes completos con estaciones usadas, distancia, consumo
+
+#### 🧭 Panel de Cliente con pestañas (Autos/Viajes/Historial)
+- Rediseño del panel de cliente con sidebar fija y navegación por pestañas (Autos/Viajes/Historial).
 - Estructura por tarjetas `.tab-content` para separar formularios y listados.
 - JavaScript de cambio de pestañas y estilos responsive en `styles/cliente.css`.
 
@@ -42,11 +551,38 @@
 
 ### 🔧 Cambios Técnicos Detallados
 
+#### Sistema de Reservas ⚙️
+- **Modelo `Reserva.php`**
+  - Método `crear()`: Validación de solapamientos antes de insertar
+  - Método `cancelar()`: Actualiza estado a 'cancelada'
+  - Métodos `listarPorUsuario()` y `listarPorCargador()`: Consultas específicas
+- **Controlador `ReservaControlador.php`**
+  - Funciones proxy hacia el modelo que devuelven arrays para API
+- **API `reservas.php`**
+  - GET: `listar_usuario`, `listar_cargador`
+  - POST: `crear` (con validación de solapes), `cancelar`
+  - Soporte JSON completo con detección de Content-Type
+
+#### Estaciones de Carga - Backend Completo ⚙️
+- **Modelo `Cargador.php`**
+  - Métodos `insertar()` y `modificar()` extendidos con: tipo, estado, potencia_kw, conectores
+  - Parámetros opcionales con valores por defecto
+- **Controlador `CargadorControlador.php`**
+  - Funciones `agregarCargador()` y `modificarCargador()` actualizadas
+  - Nueva función `modificarCargador()` para edición completa
+- **API `cargadores.php`**
+  - POST acción `agregar`: Acepta todos los nuevos campos
+  - POST acción `modificar`: Permite editar estaciones con nuevos datos
+  - GET: Devuelve todos los campos automáticamente
+- **Migración SQL**
+  - Archivo `MIGRACION_CARGADORES.sql` con ALTER TABLE para agregar columnas
+  - Campos: tipo VARCHAR(50), estado VARCHAR(30), potencia_kw DECIMAL(5,2), conectores VARCHAR(255)
+
 #### Correcciones de Arquitectura MVC ⚙️
 - **Patrón MVC respetado al 100%**
   - `CargadorControlador.php`: Refactorizado completamente
     - Ahora usa el modelo `Cargador` en lugar de hacer queries SQL directas
-    - Funciones: `listarCargadores()`, `agregarCargador()`, `eliminarCargador()`
+    - Funciones: `listarCargadores()`, `agregarCargador()`, `eliminarCargador()`, `modificarCargador()`
   - `UsuarioControlador.php`: Orden de parámetros unificado
     - `registrarUsuario($username, $password, $tipo_usuario, $correo = '')`
     - Parámetro `correo` opcional con generación automática
@@ -109,35 +645,73 @@
     - Nombres de acciones actualizados para consistencia
 
 - `vista/cliente.php`
-  - Nueva estructura con pestañas: `#tab-autos` y `#tab-viajes`.
-  - Eliminado el import de `../styles/formulario.css` para evitar conflictos.
-  - JS para cambiar pestañas y cargar listados de autos y viajes.
+  - Nueva estructura con pestañas: `#tab-autos`, `#tab-viajes`, `#tab-historial`
+  - Eliminado el import de `../styles/formulario.css` para evitar conflictos
+  - **Planificador de viajes completo:**
+    - Formulario con origen, destino, selector de auto, radio (km), botón "Buscar ruta"
+    - Carga automática de autos del usuario en selector con data-autonomia
+    - Validaciones: campos vacíos, radio entre 1-50, auto con autonomía
+  - **Mapa Leaflet integrado:**
+    - Inicialización en primera apertura de pestaña Viajes
+    - Función `trazarRutaYSugerir()`: geocodifica, dibuja ruta, filtra estaciones, sugiere paradas
+    - Marcadores con popup de información y botones "Reservar" y "Ver"
+    - Tabla de estaciones con columnas: Estación, Tipo, Estado, Lat, Lon, Recomendada, Acciones
+  - **Modal de detalle de estación:**
+    - Muestra toda la info disponible (nombre, lat/lon, tipo, estado, descripción)
+    - Botón "Reservar aquí" que abre el modal de reserva
+  - **Modal de reserva:**
+    - Inputs: fecha (date), hora (time), duración (minutos)
+    - Submit JSON a `api/reservas.php`
+    - Actualiza lista "Mis reservas" tras confirmar
+  - **Pestaña Historial:**
+    - Tabla de reservas pasadas y completadas
+    - Filtrado por fecha de inicio < ahora o estado cancelada/completada
+    - Comentarios TODO para implementar tabla de viajes
+  - JS para cambiar pestañas y cargar listados de autos, cargadores, reservas e historial
 
 ---
 
-### � Archivos Eliminados
+### 📦 Archivos Nuevos
+
+- `modelo/Reserva.php` - Modelo de reservas con validación de solapamientos
+- `controlador/ReservaControlador.php` - Controlador de reservas
+- `api/reservas.php` - API REST para gestión de reservas
+- `MIGRACION_CARGADORES.sql` - Script SQL para extender tabla cargadores
+
+### 📦 Archivos Eliminados
 
 - ❌ `api/autos_admin.php` - Funcionalidad integrada en `admin.php`
 
 ### 📝 Archivos Modificados
 
+**Modelos:**
+- `modelo/Cargador.php` ⚙️
+  - Extendido con campos tipo, estado, potencia_kw, conectores
+  - Métodos `insertar()` y `modificar()` actualizados con nuevos parámetros opcionales
+- `modelo/Auto.php`
+  - Métodos `listarTodos()`, `actualizarAdmin()`, `eliminarAdmin()`
+
 **Controladores:**
+- `controlador/CargadorControlador.php` ⚙️
+  - Refactorizado para usar el Modelo correctamente
+  - Nuevas funciones: `modificarCargador()`
+  - Parámetros extendidos en `agregarCargador()`
 - `controlador/AutoControlador.php`
   - Funciones administrativas: `listarAutosAdmin()`, `agregarAutoAdmin()`, `editarAutoAdmin()`, `eliminarAutoAdmin()`
+  - Funciones de usuario: `listarAutosUsuario()`, `agregarAutoUsuario()`, `editarAutoUsuario()`, `eliminarAutoUsuario()`
   - Arquitectura mejorada manteniendo patrón MVC
-- `controlador/CargadorControlador.php` ⚙️
-  - Refactorizado completamente para usar el Modelo
-  - Eliminadas queries SQL directas
-  - Funciones: `listarCargadores()`, `agregarCargador()`, `eliminarCargador()`
 - `controlador/UsuarioControlador.php` ⚙️
   - Orden de parámetros corregido en `registrarUsuario()`
   - Soporte para correo opcional
 
-**Modelos:**
-- `modelo/Cargador.php` ⚙️
-  - Parámetro `descripcion` ahora opcional en `insertar()`
-
 **APIs:**
+- `api/cargadores.php` ⚙️
+  - POST acción `agregar`: Ahora acepta descripcion, tipo, estado, potencia_kw, conectores
+  - POST acción `modificar`: Nueva acción para editar estaciones completas
+  - Llama a funciones del `CargadorControlador` (respeta MVC)
+- `api/reservas.php` (nuevo)
+  - GET listar_usuario/listar_cargador
+  - POST crear/cancelar con soporte JSON
 - `api/admin.php`
   - Integración completa de gestión de autos
   - Función `verificarAdmin()` para seguridad
@@ -150,6 +724,21 @@
   - Orden de parámetros corregido para llamar a `registrarUsuario()`
 
 **Vistas:**
+- `vista/cliente.php`
+  - **Estructura de pestañas:** Autos, Viajes, Historial
+  - **Planificador de viajes:** Formulario completo + mapa Leaflet + tabla de estaciones
+  - **Modales:** Reserva (date/time/duration) y Detalle de estación
+  - **Historial:** Tabla de reservas pasadas con comentarios TODO para viajes
+  - **JavaScript:**
+    - `cargarAutosSelector()`: Carga autos en el selector con autonomía
+    - `trazarRutaYSugerir()`: Geocodifica, dibuja ruta, filtra y sugiere paradas
+    - `renderPanelEstaciones()`: Renderiza tabla con tipo/estado
+    - `abrirDetalleEstacion()`: Abre modal con info completa
+    - `abrirReserva()`: Abre modal de reserva precargado
+    - `listarReservas()`: Lista reservas activas
+    - `cargarHistorialReservas()`: Filtra y muestra reservas pasadas
+    - Event listeners para modales y botón "Buscar ruta"
+  - **Leaflet CDN:** CSS y JS integrados
 - `vista/formulario.php`
   - Formulario de agregar auto en pestaña "Autos"
   - Función `cargarUsuariosParaAutos()`
@@ -158,10 +747,15 @@
   - Actualización de nombres de acciones
 
 **Estilos:**
-- Formulario con fondo `#f8f9fa` y bordes redondeados
-- Grid responsive que se adapta al tamaño de la pantalla
-- Botón verde (`#4CAF50`) para agregar
-- Inputs con estilo consistente
+- `styles/cliente.css`
+  - Estilos para modales de reserva y detalle de estación (reutiliza clases existentes)
+  - Planificador en grid responsive
+  - Tablas de estaciones e historial
+- `styles/formulario.css`
+  - Formulario con fondo `#f8f9fa` y bordes redondeados
+  - Grid responsive que se adapta al tamaño de la pantalla
+  - Botón verde (`#4CAF50`) para agregar
+  - Inputs con estilo consistente
 
 ---
 
@@ -183,32 +777,94 @@
   - Acceso a `#btn-cerrar-sesion` inexistente.
   - Solución: verificación de existencia antes de asignar el handler.
 
+5. **"Acción POST no reconocida" en reservas**
+  - API de reservas no leía el campo `accion` de JSON bodies
+  - Solución: Detección de Content-Type application/json y parseo del body
+
 ---
 
 ### ✨ Mejoras de UX
 
-1. **Proceso de agregar autos simplificado**
+1. **Flujo de planificación intuitivo**
+   - Proceso claro: Origen → Destino → Auto → Buscar → Ver estaciones → Reservar
+   - Validaciones inmediatas con mensajes claros
+   - Recomendaciones automáticas de paradas según autonomía
+   - Mapa interactivo con marcadores informativos
+
+2. **Información completa de estaciones**
+   - Tipo de cargador visible (Tipo 1, Tipo 2, CCS, CHAdeMO, etc.)
+   - Estado en tiempo real (disponible, en uso, fuera de servicio)
+   - Potencia y tipos de conectores disponibles
+   - Modal de detalle con toda la información
+
+3. **Reservas más usables**
+   - Calendar y time picker nativos del navegador
+   - Duración flexible en minutos (múltiplos de 15)
+   - Validación de solapamientos en backend
+   - Lista actualizada automáticamente
+
+4. **Historial de cargas**
+   - Vista separada para consultar reservas pasadas
+   - Diferencia clara entre reservas activas e historial
+   - Preparado para futuro: historial de viajes completos
+
+5. **Proceso de agregar autos simplificado**
    - Formulario claro y organizado en la parte superior
    - Selector de usuario con formato: "nombre_usuario (tipo_usuario)"
    - Feedback inmediato con alert tras agregar
    - Lista de autos se actualiza automáticamente
 
-2. **Consistencia visual**
+6. **Consistencia visual**
    - Diseño alineado con el resto del panel de administración
    - Colores corporativos mantenidos
    - Espaciado adecuado entre elementos
 
-3. **Cliente con navegación por pestañas**
+7. **Cliente con navegación por pestañas**
   - Sidebar clara con estados activo/hover consistentes.
   - Transiciones suaves y tarjetas diferenciadas por sección.
 
-4. **Admin minimalista**
+8. **Admin minimalista**
   - Interfaz más limpia, foco accesible en inputs, tablas claras.
 
-3. **Mejor organización del código**
+9. **Mejor organización del código**
    - API unificada más fácil de mantener
    - Menos archivos que gestionar
    - Código más limpio y reutilizable
+
+---
+
+### 📝 Notas de Migración
+
+**Para actualizar la base de datos:**
+
+1. **Tabla de reservas** (ejecutar manualmente):
+```sql
+CREATE TABLE IF NOT EXISTS reservas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    cargador_id INT NOT NULL,
+    inicio DATETIME NOT NULL,
+    fin DATETIME NOT NULL,
+    estado VARCHAR(30) DEFAULT 'confirmada',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (cargador_id) REFERENCES cargadores(id) ON DELETE CASCADE
+);
+```
+
+2. **Extensión de tabla cargadores:**
+```bash
+# Ejecutar el script de migración:
+mysql -u root -p gestion_db < MIGRACION_CARGADORES.sql
+```
+O manualmente:
+```sql
+ALTER TABLE cargadores
+ADD COLUMN tipo VARCHAR(50) DEFAULT '' AFTER descripcion,
+ADD COLUMN estado VARCHAR(30) DEFAULT 'disponible' AFTER tipo,
+ADD COLUMN potencia_kw DECIMAL(5,2) DEFAULT 0.00 AFTER estado,
+ADD COLUMN conectores VARCHAR(255) DEFAULT '' AFTER potencia_kw;
+```
 
 ---
 
@@ -231,12 +887,49 @@
 4. **Mejor seguridad**
    - Verificación de permisos centralizada
    - Menos puntos de entrada a validar
+   - Validación de solapamientos en reservas
+
+5. **Experiencia de usuario superior**
+   - Planificación de viajes visual e intuitiva
+   - Información completa de estaciones
+   - Gestión de reservas integrada
+   - Historial de cargas disponible
 
 ---
 
 ### 🚀 Próximas Mejoras Sugeridas
 
+**Sistema de Planificación:**
+- [ ] Ruteo real con OSRM, Mapbox o Google Directions API (reemplazar línea recta)
+- [ ] Cálculo de consumo estimado por viaje
+- [ ] Exportar ruta planificada a PDF o compartir por link
+
+**Estaciones:**
+- [ ] Edición de estaciones desde panel admin con nuevos campos
+- [ ] Filtros por tipo, estado, potencia en el mapa
+- [ ] Ordenamiento por distancia al usuario
+- [ ] Fotos de las estaciones
+- [ ] Comentarios y ratings de usuarios
+
+**Reservas:**
+- [ ] Vista de calendario con slots disponibles
+- [ ] Notificaciones por email/SMS antes de la reserva
+- [ ] Código QR para check-in en la estación
+- [ ] Tiempo máximo de reserva según tipo de usuario
+- [ ] Penalización por no presentarse (no-show)
+
+**Historial:**
+- [ ] Implementar tabla `viajes` con estaciones usadas, distancia, consumo
+- [ ] Gráficos de consumo y uso de estaciones
+- [ ] Estadísticas mensuales/anuales
+- [ ] Exportar historial a CSV/Excel
+- [ ] Comparativa de eficiencia entre autos
+
+**Validaciones:**
 - [ ] Validación de datos del auto (ej: año entre 1900 y año actual+1)
+- [ ] Impedir reservas en fechas pasadas (validación frontend)
+- [ ] Límite de duración máxima por reserva
+- [ ] Toasts/notificaciones en lugar de alerts
 - [ ] Autocompletar modelo/marca basado en marcas existentes
 - [ ] Vista previa antes de agregar el auto
 - [ ] Agregar múltiples autos de una vez (batch insert)

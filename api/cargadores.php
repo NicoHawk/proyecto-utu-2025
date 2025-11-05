@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../controlador/CargadorControlador.php';
-require_once __DIR__ . '/../db.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -9,8 +8,6 @@ header('Content-Type: application/json');
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-$conn = conectar();
-
 switch ($method) {
     case 'OPTIONS':
         http_response_code(200);
@@ -18,7 +15,7 @@ switch ($method) {
 
     case 'GET':
         // Listar cargadores
-        $cargadores = listarCargadores($conn);
+        $cargadores = listarCargadores();
         echo json_encode($cargadores);
         break;
 
@@ -34,8 +31,25 @@ switch ($method) {
             $nombre = $input['nombre'] ?? '';
             $latitud = $input['latitud'] ?? '';
             $longitud = $input['longitud'] ?? '';
-            $res = agregarCargador($conn, $nombre, $latitud, $longitud);
-            echo json_encode(['exito' => $res]);
+            $descripcion = $input['descripcion'] ?? '';
+            $tipo = $input['tipo'] ?? '';
+            $estado = $input['estado'] ?? 'disponible';
+            $potencia_kw = $input['potencia_kw'] ?? 0;
+            $conectores = $input['conectores'] ?? '';
+            $res = agregarCargador($nombre, $latitud, $longitud, $descripcion, $tipo, $estado, $potencia_kw, $conectores);
+            echo json_encode($res);
+        } else if (isset($input['accion']) && $input['accion'] === 'modificar') {
+            $id = $input['id'] ?? 0;
+            $nombre = $input['nombre'] ?? '';
+            $latitud = $input['latitud'] ?? '';
+            $longitud = $input['longitud'] ?? '';
+            $descripcion = $input['descripcion'] ?? '';
+            $tipo = $input['tipo'] ?? '';
+            $estado = $input['estado'] ?? 'disponible';
+            $potencia_kw = $input['potencia_kw'] ?? 0;
+            $conectores = $input['conectores'] ?? '';
+            $res = modificarCargador($id, $nombre, $latitud, $longitud, $descripcion, $tipo, $estado, $potencia_kw, $conectores);
+            echo json_encode($res);
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción POST no soportada']);
         }
@@ -45,8 +59,8 @@ switch ($method) {
         $input = json_decode(file_get_contents("php://input"), true);
         if ($input && isset($input['accion']) && $input['accion'] === 'eliminar') {
             $id = $input['id'] ?? null;
-            $res = eliminarCargador($conn, $id);
-            echo json_encode(['exito' => $res]);
+            $res = eliminarCargador($id);
+            echo json_encode($res);
         } else {
             echo json_encode(['exito' => false, 'error' => 'Acción DELETE no soportada']);
         }

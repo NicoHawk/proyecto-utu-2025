@@ -94,3 +94,35 @@ th { background: #eef4ff; color: #1f4ccd; }
     h1 { font-size: 1.5em; }
     h2 { font-size: 1.2em; }
 }
+
+/* Mensajes Toast */
+.mensaje-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95em;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+    transition: opacity 0.3s;
+}
+.mensaje-toast.exito {
+    background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+}
+.mensaje-toast.error {
+    background: linear-gradient(135deg, #e53935 0%, #ef5350 100%);
+}
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

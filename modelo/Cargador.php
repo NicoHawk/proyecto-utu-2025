@@ -8,10 +8,10 @@ class Cargador {
         $this->conexion = conectar();
     }
 
-    public function insertar($nombre, $latitud, $longitud, $descripcion = '') {
-        $sql = "INSERT INTO cargadores (nombre, latitud, longitud, descripcion) VALUES (?, ?, ?, ?)";
+    public function insertar($nombre, $latitud, $longitud, $descripcion = '', $tipo = '', $estado = 'disponible', $potencia_kw = 0, $conectores = '') {
+        $sql = "INSERT INTO cargadores (nombre, latitud, longitud, descripcion, tipo, estado, potencia_kw, conectores) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conexion->prepare($sql);
-        return $stmt->execute([$nombre, $latitud, $longitud, $descripcion]);
+        return $stmt->execute([$nombre, $latitud, $longitud, $descripcion, $tipo, $estado, $potencia_kw, $conectores]);
     }
 
     public function listar() {
@@ -32,10 +32,10 @@ class Cargador {
         return $stmt->execute([$id]);
     }
 
-    public function modificar($id, $nombre, $latitud, $longitud, $descripcion) {
-        $sql = "UPDATE cargadores SET nombre = ?, latitud = ?, longitud = ?, descripcion = ? WHERE id = ?";
+    public function modificar($id, $nombre, $latitud, $longitud, $descripcion, $tipo = '', $estado = 'disponible', $potencia_kw = 0, $conectores = '') {
+        $sql = "UPDATE cargadores SET nombre = ?, latitud = ?, longitud = ?, descripcion = ?, tipo = ?, estado = ?, potencia_kw = ?, conectores = ? WHERE id = ?";
         $stmt = $this->conexion->prepare($sql);
-        return $stmt->execute([$nombre, $latitud, $longitud, $descripcion, $id]);
+        return $stmt->execute([$nombre, $latitud, $longitud, $descripcion, $tipo, $estado, $potencia_kw, $conectores, $id]);
     }
 }
 ?>

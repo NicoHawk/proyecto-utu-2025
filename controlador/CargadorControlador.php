@@ -9,14 +9,22 @@ function listarCargadores() {
     return $cargadorModel->listar();
 }
 
-function agregarCargador($nombre, $latitud, $longitud) {
+function agregarCargador($nombre, $latitud, $longitud, $descripcion = '', $tipo = '', $estado = 'disponible', $potencia_kw = 0, $conectores = '') {
     if (empty($nombre) || empty($latitud) || empty($longitud)) {
         return ['exito' => false, 'mensaje' => 'Datos incompletos'];
     }
     $cargadorModel = new Cargador();
-    // Modelo Cargador espera 4 parámetros, pero solo usamos 3, así que pasamos '' para descripcion
-    $ok = $cargadorModel->insertar($nombre, $latitud, $longitud, '');
+    $ok = $cargadorModel->insertar($nombre, $latitud, $longitud, $descripcion, $tipo, $estado, $potencia_kw, $conectores);
     return ['exito' => (bool)$ok, 'mensaje' => $ok ? 'Cargador agregado' : 'No se pudo agregar'];
+}
+
+function modificarCargador($id, $nombre, $latitud, $longitud, $descripcion = '', $tipo = '', $estado = 'disponible', $potencia_kw = 0, $conectores = '') {
+    if (empty($id) || empty($nombre) || empty($latitud) || empty($longitud)) {
+        return ['exito' => false, 'mensaje' => 'Datos incompletos'];
+    }
+    $cargadorModel = new Cargador();
+    $ok = $cargadorModel->modificar($id, $nombre, $latitud, $longitud, $descripcion, $tipo, $estado, $potencia_kw, $conectores);
+    return ['exito' => (bool)$ok, 'mensaje' => $ok ? 'Cargador modificado' : 'No se pudo modificar'];
 }
 
 function eliminarCargador($id) {
