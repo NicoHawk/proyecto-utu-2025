@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/Cargador.php';
 
 class Reserva {
     private $conexion;
@@ -19,13 +20,43 @@ class Reserva {
         $sqlIns = "INSERT INTO reservas (usuario, cargador_id, inicio, fin, estado) VALUES (?, ?, ?, ?, 'confirmada')";
         $stmtIns = $this->conexion->prepare($sqlIns);
         $ok = $stmtIns->execute([$usuario, $cargador_id, $inicio, $fin]);
+
+        if ($ok) {
+            // Solo marcar como ocupado si la reserva está activa ahora mismo
+            $nowTs = time();
+            $iniTs = strtotime($inicio);
+            $finTs = strtotime($fin);
+            if ($iniTs !== false && $finTs !== false && $iniTs <= $nowTs && $finTs > $nowTs) {
+                $cargador = new Cargador();
+                $cargador->actualizarEstado($cargador_id, 'ocupado');
+            }
+        }
+        
         return [$ok, $ok ? 'Reserva creada' : 'No se pudo crear la reserva'];
     }
 
     public function cancelar($usuario, $reserva_id) {
+        // Obtener info de la reserva antes de cancelar
+        $sqlGet = "SELECT cargador_id FROM reservas WHERE id = ? AND usuario = ?";
+        $stmtGet = $this->conexion->prepare($sqlGet);
+        $stmtGet->execute([$reserva_id, $usuario]);
+        $reserva = $stmtGet->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$reserva) return false;
+        
         $sql = "UPDATE reservas SET estado = 'cancelada' WHERE id = ? AND usuario = ?";
         $stmt = $this->conexion->prepare($sql);
-        return $stmt->execute([$reserva_id, $usuario]);
+        $ok = $stmt->execute([$reserva_id, $usuario]);
+        
+        if ($ok) {
+            // Verificar si el cargador tiene otras reservas activas
+            $cargador = new Cargador();
+            if (!$cargador->tieneReservaActiva($reserva['cargador_id'])) {
+                $cargador->actualizarEstado($reserva['cargador_id'], 'disponible');
+            }
+        }
+        
+        return $ok;
     }
 
     public function listarPorUsuario($usuario) {

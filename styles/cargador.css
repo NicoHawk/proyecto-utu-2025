@@ -32,13 +32,12 @@ body {
 }
 
 .container {
-    max-width: 500px;
+    max-width: 1200px;
     margin: 40px auto;
     background: rgba(255,255,255,0.97);
     border-radius: 18px;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
     padding: 44px 32px 32px 32px;
-    text-align: center;
     position: relative;
 }
 
@@ -64,22 +63,62 @@ p {
     background: #e0f7fa;
     overflow: hidden;
 }
-#formCargador { display: flex; gap: 10px; align-items: center; width: 100%; margin-bottom: 18px; }
-#formCargador input { flex: 1; border-radius: 7px; border: 1px solid #b2ebf2; padding: 8px; font-size: 1em; }
-#formCargador button { min-width: 140px; border-radius: 7px; border: none; background: linear-gradient(90deg, #1976d2 60%, #26c6da 100%); color: #fff; font-weight: 600; font-size: 1em; padding: 8px 0; cursor: pointer; transition: background 0.3s, transform 0.1s; }
-#formCargador button:disabled { background: #bdbdbd; color: #fff; cursor: not-allowed; }
-#formCargador button:hover:not(:disabled) { background: linear-gradient(90deg, #004d40 60%, #0288d1 100%); transform: translateY(-2px) scale(1.04); }
-#listaCargadores { margin-top: 0; width: 100%; max-width: 600px; }
+
+/* Formulario en grid */
+#formCargador input,
+#formCargador select {
+    border-radius: 7px;
+    border: 1px solid #b2ebf2;
+    padding: 10px;
+    font-size: 1em;
+    font-family: 'Montserrat', Arial, sans-serif;
+}
+
+#formCargador input:focus,
+#formCargador select:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+}
+
+#formCargador button {
+    border-radius: 7px;
+    border: none;
+    background: linear-gradient(90deg, #1976d2 60%, #26c6da 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1em;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+}
+
+#formCargador button:disabled {
+    background: #bdbdbd;
+    color: #fff;
+    cursor: not-allowed;
+}
+
+#formCargador button:hover:not(:disabled) {
+    background: linear-gradient(90deg, #004d40 60%, #0288d1 100%);
+    transform: translateY(-2px) scale(1.04);
+}
+
+#tablaCargadores {
+    margin-top: 20px;
+    width: 100%;
+    overflow-x: auto;
+}
 
 @media (max-width: 800px) {
     .container { padding: 12px 2vw; }
 }
 
-.btn-editar, .btn-guardar, .btn-cancelar, .btn-eliminar, .btn-ver-mapa {
+.btn-editar, .btn-guardar, .btn-cancelar, .btn-eliminar, .btn-ver-mapa, .btn-ver-ubicacion {
     border: none;
     border-radius: 7px;
     padding: 7px 16px;
-    font-size: 1em;
+    font-size: 0.9em;
     font-weight: 600;
     margin: 0 2px;
     cursor: pointer;
@@ -89,24 +128,19 @@ p {
 .btn-guardar { background: #43a047; color: #fff; }
 .btn-cancelar { background: #bdbdbd; color: #fff; }
 .btn-eliminar { background: #e53935; color: #fff; }
-.btn-ver-mapa {
+.btn-ver-mapa, .btn-ver-ubicacion {
     background: linear-gradient(90deg, #00bcd4 60%, #4dd0e1 100%);
     color: #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-    border: none;
-    border-radius: 7px;
-    padding: 7px 16px;
-    font-size: 1em;
-    font-weight: 600;
-    margin: 0 2px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.1s;
+    font-size: 0.85em;
+    padding: 6px 12px;
+    margin-top: 4px;
 }
-.btn-editar:hover { background: #0097a7; }
-.btn-guardar:hover { background: #388e3c; }
-.btn-cancelar:hover { background: #757575; }
-.btn-eliminar:hover { background: #b71c1c; }
-.btn-ver-mapa:hover {
+.btn-editar:hover { background: #0097a7; transform: translateY(-1px); }
+.btn-guardar:hover { background: #388e3c; transform: translateY(-1px); }
+.btn-cancelar:hover { background: #757575; transform: translateY(-1px); }
+.btn-eliminar:hover { background: #b71c1c; transform: translateY(-1px); }
+.btn-ver-mapa:hover, .btn-ver-ubicacion:hover {
     background: linear-gradient(90deg, #0288d1 60%, #00bcd4 100%);
     transform: translateY(-2px) scale(1.04);
 }
@@ -213,3 +247,42 @@ p {
     }
 }
 
+/* Estilos para tabla de cargadores */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #e0f7fa;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background: #e0f7fa;
+    color: #00796b;
+    font-weight: 600;
+}
+
+/* Checkboxes personalizados */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #1976d2;
+}
+
+/* Resaltado temporal del mapa al hacer scroll con "Ver" */
+#map.map-highlight {
+    box-shadow: 0 0 0 3px rgba(31, 76, 205, 0.35), 0 0 24px rgba(31, 76, 205, 0.25);
+    border-radius: 12px;
+    animation: mapPulse 1.2s ease-out 1;
+}
+
+@keyframes mapPulse {
+    0% { box-shadow: 0 0 0 0 rgba(31, 76, 205, 0.45), 0 0 0 rgba(31, 76, 205, 0.0); }
+    70% { box-shadow: 0 0 0 8px rgba(31, 76, 205, 0.18), 0 0 36px rgba(31, 76, 205, 0.25); }
+    100% { box-shadow: 0 0 0 0 rgba(31, 76, 205, 0.0), 0 0 0 rgba(31, 76, 205, 0.0); }
+}

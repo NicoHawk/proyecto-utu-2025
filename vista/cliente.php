@@ -131,34 +131,66 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
             <h1>Planificación de Viajes</h1>
             <p style="color: #b2ebf2; text-shadow: 1px 1px 4px #222;">Ingresá origen y destino, elegí tu auto y te sugerimos paradas cercanas a la ruta</p>
 
-            <!-- Planificador: origen/destino + auto + radio y botón de búsqueda -->
-            <div id="planificador" style="display:grid;grid-template-columns:1fr 1fr 1fr 160px 150px;gap:12px;align-items:end;margin-bottom:16px;">
-                <div>
-                    <label for="origen">Origen</label>
-                    <input type="text" id="origen" placeholder="Ej: Av. 18 de Julio 1000, Montevideo" />
+            <!-- Eliminado planificador superior, solo quick-bar -->
+
+            <!-- Filtros de estaciones (ahora abajo, antes de la tabla) -->
+
+            <!-- Mapa y estaciones en ruta -->
+            <!-- Barra rápida similar a la referencia: origen rápido / usar ubicación / destino / planificar -->
+            <div class="quick-bar">
+                <div class="qb-left">
+                    <input type="text" id="q_origen" placeholder="Origen (ej: Av. 18 de Julio 1000, Montevideo)" />
+                    <button id="btnMiUbic" class="btn-ghost">📍 Usar mi ubicación</button>
                 </div>
-                <div>
-                    <label for="destino">Destino</label>
-                    <input type="text" id="destino" placeholder="Ej: Terminal Tres Cruces" />
+                <div class="qb-right">
+                    <input type="text" id="q_destino" placeholder="Destino (ej: Pando, Canelones)" />
+                    <button id="btnPlanificarQuick" class="btn-primary">Planificar ruta</button>
                 </div>
+            </div>
+            <!-- Selector visible de auto debajo del título/quick-bar -->
+            <div id="autoPicker" style="margin:10px 0 10px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <label for="autoSelector" style="min-width:180px;color:#b2ebf2;">Seleccioná un auto</label>
+                <select id="autoSelector" style="min-width:260px;padding:8px 10px;border-radius:8px;border:1px solid #334; background:#0f1a21; color:#e0f7fa;"></select>
+                <div id="autoResumen" style="font-size:0.9em;color:#b2ebf2;"></div>
+            </div>
+            <!-- Inputs ocultos internos -->
+            <input type="hidden" id="origen" />
+            <input type="hidden" id="destino" />
+
+            <div id="mapaRuta" style="height:380px;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.35);margin-bottom:24px;"></div>
+            <h2 style="margin-top:0;">Estaciones disponibles</h2>
+            <!-- Filtros abajo -->
+            <div id="filtrosEstaciones" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;align-items:end;margin:24px 0 12px 0;">
                 <div>
-                    <label for="autoSelector">Auto</label>
-                    <select id="autoSelector">
-                        <option value="">Seleccioná un auto…</option>
+                    <label for="filtroTipo">Tipo</label>
+                    <select id="filtroTipo">
+                        <option value="">Todos</option>
                     </select>
                 </div>
                 <div>
-                    <label for="bufferKm">Radio a la ruta (km)</label>
-                    <input type="number" id="bufferKm" min="1" max="50" step="1" value="5" />
+                    <label for="filtroEstado">Estado</label>
+                    <select id="filtroEstado">
+                        <option value="">Todos</option>
+                    </select>
                 </div>
-                <div style="display:flex;gap:8px;">
-                    <button id="btnBuscarRuta" type="button" style="width:100%;height:40px;align-self:center;">Buscar ruta</button>
+                <div>
+                    <label for="filtroConector">Conector</label>
+                    <select id="filtroConector">
+                        <option value="">Todos</option>
+                        <option>Tipo 1</option>
+                        <option>Tipo 2</option>
+                        <option>CCS Combo 1</option>
+                        <option>CCS Combo 2</option>
+                        <option>CHAdeMO</option>
+                        <option>Tesla (NACS)</option>
+                        <option>GB/T</option>
+                    </select>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="checkbox" id="filtroCompatibleAuto" />
+                    <label for="filtroCompatibleAuto" style="margin:0;">Solo compatibles con mi auto</label>
                 </div>
             </div>
-
-            <!-- Mapa y estaciones en ruta -->
-            <h2>Estaciones disponibles</h2>
-            <div id="mapaRuta" style="height:380px;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.35);margin-bottom:16px;"></div>
             <div id="panelEstaciones"></div>
 
             <h2 style="margin-top:32px;">Mis reservas</h2>
@@ -370,7 +402,22 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
                 const tr = e.target.closest('tr');
                 tr.querySelectorAll('.editable').forEach(td => {
                     const valor = td.textContent;
-                    td.innerHTML = `<input type="text" value="${valor}" style="width:90%;">`;
+                    const campo = td.dataset.campo;
+                    
+                    // Si es el campo conector, mostrar un select con las opciones
+                    if (campo === 'conector') {
+                        td.innerHTML = `<select style="width:90%;">
+                            <option value="Tipo 1" ${valor === 'Tipo 1' ? 'selected' : ''}>Tipo 1 (SAE J1772)</option>
+                            <option value="Tipo 2" ${valor === 'Tipo 2' ? 'selected' : ''}>Tipo 2 (Mennekes)</option>
+                            <option value="CCS Combo 1" ${valor === 'CCS Combo 1' ? 'selected' : ''}>CCS Combo 1</option>
+                            <option value="CCS Combo 2" ${valor === 'CCS Combo 2' ? 'selected' : ''}>CCS Combo 2</option>
+                            <option value="CHAdeMO" ${valor === 'CHAdeMO' ? 'selected' : ''}>CHAdeMO</option>
+                            <option value="Tesla (NACS)" ${valor === 'Tesla (NACS)' ? 'selected' : ''}>Tesla (NACS)</option>
+                            <option value="GB/T" ${valor === 'GB/T' ? 'selected' : ''}>GB/T</option>
+                        </select>`;
+                    } else {
+                        td.innerHTML = `<input type="text" value="${valor}" style="width:90%;">`;
+                    }
                 });
                 tr.querySelector('.btn-editar').style.display = 'none';
                 tr.querySelector('.btn-guardar').style.display = '';
@@ -382,15 +429,15 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
             if (e.target.classList.contains('btn-guardar')) {
                 const tr = e.target.closest('tr');
                 const id = tr.getAttribute('data-id');
-                const inputs = tr.querySelectorAll('input');
+                const editables = tr.querySelectorAll('.editable');
                 const datos = {
                     accion: 'editar',
                     id: id,
-                    marca: inputs[0].value,
-                    modelo: inputs[1].value,
-                    conector: inputs[2].value,
-                    autonomia: inputs[3].value,
-                    anio: inputs[4].value
+                    marca: editables[0].querySelector('input, select').value,
+                    modelo: editables[1].querySelector('input, select').value,
+                    conector: editables[2].querySelector('input, select').value,
+                    autonomia: editables[3].querySelector('input, select').value,
+                    anio: editables[4].querySelector('input, select').value
                 };
                 fetch('../api/autos.php', {
                     method: 'POST',
@@ -512,8 +559,14 @@ document.getElementById('formEditarPerfil').addEventListener('submit', function(
     });
 });
 
-// --------- Mapa y planificación simple con Leaflet ---------
+// --------- Mapa y planificación con Leaflet + OSRM ---------
 let mapa, capaRuta, capaParadas, capaEstaciones, estaciones = [];
+let overrideOriginCoords = null; // si el usuario usa geolocalización para origen
+let estacionSeleccionadaParaReserva = null; // estación desde marcador que pidió reservar
+let currentLocation = null; // {lat, lon}
+let rutaCoordsLatLng = []; // Array de [lat, lon] de la ruta actual
+let rutaTotalKm = 0;
+let refrescoEstadosTimer = null; // auto-refresh periódico
 
 // Inicializa mapa cuando se muestra la pestaña viajes por primera vez
 let mapaInicializado = false;
@@ -524,6 +577,16 @@ document.querySelector('[data-tab="viajes"]').addEventListener('click', () => {
         cargarAutosSelector();
         listarReservas();
         mapaInicializado = true;
+        // Iniciar auto-refresh de estados cada 30s cuando la pestaña de viajes está activa
+        if (!refrescoEstadosTimer) {
+            refrescoEstadosTimer = setInterval(() => {
+                // Solo refrescar si la pestaña viajes está visible
+                const tab = document.getElementById('tab-viajes');
+                if (tab && tab.style.display !== 'none') {
+                    refrescarEstados();
+                }
+            }, 30000);
+        }
     }
 });
 
@@ -537,34 +600,167 @@ document.querySelector('[data-tab="historial"]')?.addEventListener('click', () =
 });
 
 function initMapa() {
+    console.log('🗺️ Inicializando mapa Leaflet...');
     mapa = L.map('mapaRuta');
+    console.log('✅ Mapa creado:', mapa);
     const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap'
     }).addTo(mapa);
+    console.log('✅ Tile layer agregado');
     mapa.setView([-34.7, -55.95], 12);
+    console.log('✅ Vista centrada en Montevideo');
     capaRuta = L.layerGroup().addTo(mapa);
+    console.log('✅ Capa de ruta creada');
     capaParadas = L.layerGroup().addTo(mapa);
+    console.log('✅ Capa de paradas creada');
     capaEstaciones = L.layerGroup().addTo(mapa);
+    console.log('✅ Capa de estaciones creada');
+    console.log('🎉 Mapa inicializado completamente');
 }
 
 function cargarCargadores() {
+    console.log('🔄 Cargando cargadores desde API...');
     fetch('../api/cargadores.php')
-      .then(r => r.json())
+      .then(r => {
+          console.log('📡 Respuesta recibida, status:', r.status);
+          if (!r.ok) {
+              throw new Error('HTTP error! status: ' + r.status);
+          }
+          return r.json();
+      })
       .then(data => {
+          console.log('📊 Datos recibidos:', data);
+          console.log('📊 Total de cargadores:', Array.isArray(data) ? data.length : 'no es array');
           estaciones = Array.isArray(data) ? data : [];
           pintarEstaciones(estaciones);
           // Mostrar listado completo sin ruta
           renderPanelEstaciones(estaciones, []);
+          // Poblar filtros dinámicamente
+          poblarFiltros(estaciones);
+      })
+      .catch(error => {
+          console.error('❌ Error al cargar cargadores:', error);
+          alert('Error al cargar las estaciones de carga: ' + error.message);
       });
 }
 
 function pintarEstaciones(lista) {
+    console.log('🎨 Pintando estaciones en mapa, total:', lista.length);
     capaEstaciones.clearLayers();
     lista.forEach(c => {
-        const m = L.marker([c.latitud, c.longitud]).addTo(capaEstaciones);
-        m.bindPopup(`<b>${c.nombre}</b><br/><button onclick=\"abrirReserva(${c.id})\">Reservar</button> <button onclick=\"abrirDetalleEstacion(${c.id})\">Ver</button>`);
+        console.log('  📍 Agregando marcador:', c.nombre, c.latitud, c.longitud);
+        const estado = String(c.estado || '').toLowerCase();
+        const estadoClass = estado ? ('pin-' + estado.replace(/\s+/g,'-')) : 'pin-disponible';
+        const iconHtml = `<div class="marker-pin ${estadoClass}"></div>`;
+        const icon = L.divIcon({
+            className: 'custom-div-icon',
+            html: iconHtml,
+            iconSize: [30, 42],
+            iconAnchor: [15, 42],
+            popupAnchor: [0, -36]
+        });
+        const m = L.marker([c.latitud, c.longitud], {icon}).addTo(capaEstaciones);
+        // Info breve tipo ejemplo: nombre, dirección, conectores, potencia, estado
+        let info = `<b>${c.nombre || '-'}</b>`;
+        if (c.direccion) info += `<br/><span style='color:#555;'>${c.direccion}</span>`;
+        else if (c.descripcion) info += `<br/><span style='color:#555;'>${c.descripcion}</span>`;
+        info += `<br/>`;
+        if (c.conectores || c.conector) {
+            info += `<span style='font-size:0.98em;'>🔌 <b>Conectores:</b> ${c.conectores ? c.conectores : c.conector}</span><br/>`;
+        }
+        if (c.potencia) {
+            info += `<span style='font-size:0.98em;'>⚡ <b>Potencia:</b> ${c.potencia} kW</span><br/>`;
+        }
+        info += `<span class='estado-badge ${estado ? ('estado-' + estado.replace(/\s+/g,'-')) : ''}'>${c.estado || '-'}</span>`;
+        info += `<br/><div style='margin-top:8px;display:flex;gap:8px;'><button onclick=\"planificarParaEstacion(${c.id})\" style='padding:6px 16px;background:#1976d2;color:#fff;border:none;border-radius:6px;font-weight:600;'>Reservar</button>`;
+        info += `<button onclick=\"abrirDetalleEstacion(${c.id})\" style='padding:6px 16px;background:#e0f7fa;color:#1976d2;border:none;border-radius:6px;font-weight:600;'>Ver</button></div>`;
+        m.bindPopup(info);
     });
+}
+
+// Refrescar estados desde el backend sin tocar la ruta ni filtros del usuario
+function refrescarEstados() {
+    fetch('../api/cargadores.php')
+      .then(r => r.json())
+      .then(data => {
+          estaciones = Array.isArray(data) ? data : [];
+          // Si hay ruta trazada, mantenemos el contexto de ruta y filtros actuales
+          if (rutaCoordsLatLng && rutaCoordsLatLng.length) {
+              const bufferKm = parseFloat(document.getElementById('bufferKm')?.value || '5');
+              const cercanasBase = estaciones.filter(e => {
+                  const p = {lat: parseFloat(e.latitud), lon: parseFloat(e.longitud)};
+                  const d = distancePointToRouteKm(p, rutaCoordsLatLng);
+                  return d <= bufferKm;
+              });
+              const cercanas = aplicarFiltros(cercanasBase);
+              pintarEstaciones(cercanas);
+              renderPanelEstaciones(cercanas, []);
+          } else {
+              // Sin ruta: mostrar todo con filtros actuales
+              const filtradas = aplicarFiltros(estaciones);
+              pintarEstaciones(filtradas);
+              renderPanelEstaciones(filtradas, []);
+          }
+      })
+      .catch(err => console.warn('Refresh estados falló:', err));
+}
+
+// Poblar selects de filtro con valores únicos
+function poblarFiltros(lista) {
+    const tipos = new Set();
+    const estados = new Set();
+    lista.forEach(c => {
+        if (c.tipo) tipos.add(String(c.tipo));
+        if (c.estado) estados.add(String(c.estado));
+    });
+    const selTipo = document.getElementById('filtroTipo');
+    const selEstado = document.getElementById('filtroEstado');
+    if (selTipo && selTipo.options.length === 1) {
+        [...tipos].sort().forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t; selTipo.appendChild(opt);
+        });
+    }
+    if (selEstado && selEstado.options.length === 1) {
+        [...estados].sort().forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t; selEstado.appendChild(opt);
+        });
+    }
+}
+
+// Aplicar filtros sobre una lista de estaciones
+function aplicarFiltros(lista) {
+    const tipo = document.getElementById('filtroTipo')?.value || '';
+    const estado = document.getElementById('filtroEstado')?.value || '';
+    const conector = document.getElementById('filtroConector')?.value || '';
+    const soloCompatibles = document.getElementById('filtroCompatibleAuto')?.checked || false;
+    let conectorAuto = '';
+    const autoSel = document.getElementById('autoSelector');
+    if (soloCompatibles && autoSel && autoSel.value) {
+        conectorAuto = autoSel.selectedOptions[0]?.dataset?.conector || '';
+    }
+
+    const matchConectores = (c, buscar) => {
+        if (!buscar) return true;
+        const raw = c.conectores ?? c.conector ?? '';
+        if (Array.isArray(raw)) return raw.some(x => String(x).toLowerCase() === buscar.toLowerCase());
+        const txt = String(raw);
+        return txt.toLowerCase().split(/[,;\|]/).map(s => s.trim()).includes(buscar.toLowerCase());
+    };
+
+    const matchConectorAuto = (c) => {
+        if (!soloCompatibles || !conectorAuto) return true;
+        return matchConectores(c, conectorAuto);
+    };
+
+    return (lista || []).filter(c =>
+        (!tipo || String(c.tipo) === tipo) &&
+        (!estado || String(c.estado) === estado) &&
+        matchConectores(c, conector) &&
+        matchConectorAuto(c)
+    );
 }
 
 // Cargar autos del usuario en el selector del planificador
@@ -577,6 +773,7 @@ function cargarAutosSelector() {
       .then(autos => {
           if (!Array.isArray(autos) || autos.length === 0) {
               sel.innerHTML = '<option value="">No tenés autos. Agregá uno en la pestaña Autos</option>';
+              document.getElementById('autoResumen').textContent = '⚠️ No tenés autos cargados. Agregá uno para poder planificar.';
               return;
           }
           sel.innerHTML = '<option value="">Seleccioná un auto…</option>';
@@ -588,9 +785,18 @@ function cargarAutosSelector() {
               opt.dataset.conector = a.conector || '';
               sel.appendChild(opt);
           });
+          // Selección automática si solo hay uno
+          if (sel.options.length === 2) sel.selectedIndex = 1;
+          if (sel.value) {
+              const o = sel.selectedOptions[0];
+              document.getElementById('autoResumen').textContent = `🚗 Usando auto: ${o.textContent} | Autonomía: ${o.dataset.autonomia} km`;
+          } else {
+              document.getElementById('autoResumen').textContent = 'Seleccioná un auto (se usará el primero si no elegís)';
+          }
       })
       .catch(() => {
           sel.innerHTML = '<option value="">Error al cargar autos</option>';
+          document.getElementById('autoResumen').textContent = '❌ Error al cargar autos.';
       });
 }
 
@@ -662,54 +868,148 @@ function distancePointToSegmentKm(p, a, b) {
     return distM / 1000.0;
 }
 
+// Distancia mínima de un punto a una polilínea (ruta) en km
+function distancePointToRouteKm(p, routeLatLng) {
+    if (!routeLatLng || routeLatLng.length < 2) return Infinity;
+    let minD = Infinity;
+    for (let i = 1; i < routeLatLng.length; i++) {
+        const a = {lat: routeLatLng[i-1][0], lon: routeLatLng[i-1][1]};
+        const b = {lat: routeLatLng[i][0], lon: routeLatLng[i][1]};
+        const d = distancePointToSegmentKm(p, a, b);
+        if (d < minD) minD = d;
+    }
+    return minD;
+}
+
+// Calcular longitud total de una ruta en km
+function longitudRutaKm(routeLatLng) {
+    let total = 0;
+    for (let i = 1; i < routeLatLng.length; i++) {
+        total += haversineKm(
+            {lat: routeLatLng[i-1][0], lon: routeLatLng[i-1][1]},
+            {lat: routeLatLng[i][0], lon: routeLatLng[i][1]}
+        );
+    }
+    return total;
+}
+
+// Punto aproximado en la ruta según fracción [0,1]
+function puntoEnRutaPorFraccion(routeLatLng, fraccion) {
+    if (!routeLatLng || routeLatLng.length === 0) return null;
+    if (fraccion <= 0) return {lat: routeLatLng[0][0], lon: routeLatLng[0][1]};
+    const total = longitudRutaKm(routeLatLng);
+    const objetivo = fraccion * total;
+    let acum = 0;
+    for (let i = 1; i < routeLatLng.length; i++) {
+        const a = {lat: routeLatLng[i-1][0], lon: routeLatLng[i-1][1]};
+        const b = {lat: routeLatLng[i][0], lon: routeLatLng[i][1]};
+        const seg = haversineKm(a, b);
+        if (acum + seg >= objetivo) {
+            const t = (objetivo - acum) / seg;
+            return {lat: a.lat + t*(b.lat - a.lat), lon: a.lon + t*(b.lon - a.lon)};
+        }
+        acum += seg;
+    }
+    const ult = routeLatLng[routeLatLng.length - 1];
+    return {lat: ult[0], lon: ult[1]};
+}
+
+// Llamada a OSRM para obtener ruta real
+async function obtenerRutaOSRM(orig, dest) {
+    const url = `https://router.project-osrm.org/route/v1/driving/${orig.lon},${orig.lat};${dest.lon},${dest.lat}?overview=full&geometries=geojson`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('OSRM HTTP ' + resp.status);
+    const data = await resp.json();
+    if (!data.routes || !data.routes.length) throw new Error('Sin rutas');
+    const r = data.routes[0];
+    const coords = r.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+    return {
+        coords,
+        distanciaKm: (r.distance || 0) / 1000,
+        duracionSeg: (r.duration || 0)
+    };
+}
+
 async function trazarRutaYSugerir() {
+    console.log('[Planificar] Inicio trazarRutaYSugerir');
     const origenTxt = document.getElementById('origen')?.value.trim();
     const destinoTxt = document.getElementById('destino')?.value.trim();
     const autoSel = document.getElementById('autoSelector');
+    if (autoSel && !autoSel.value && autoSel.options.length > 1) {
+        // seleccionar primera opción válida automáticamente
+        autoSel.selectedIndex = 1;
+        console.log('[Planificar] Auto seleccionado automáticamente:', autoSel.selectedOptions[0].textContent);
+        const o = autoSel.selectedOptions[0];
+        document.getElementById('autoResumen').textContent = `🚗 Usando auto: ${o.textContent} | Autonomía: ${o.dataset.autonomia} km`;
+    }
     const autoAutonomia = parseFloat(autoSel?.selectedOptions[0]?.dataset?.autonomia || '0');
     const bufferKm = parseFloat(document.getElementById('bufferKm')?.value || '5');
+    console.log('[Planificar] origenTxt:', origenTxt, 'destinoTxt:', destinoTxt, 'autoAutonomia:', autoAutonomia, 'bufferKm:', bufferKm);
     if (!origenTxt || !destinoTxt) { alert('Completá origen y destino'); return; }
     if (!autoAutonomia) { alert('Seleccioná un auto con autonomía'); return; }
     if (isNaN(bufferKm) || bufferKm < 1 || bufferKm > 50) { alert('Ingresá un radio entre 1 y 50 km'); return; }
 
     try {
-        // Geocodificar con pequeño delay entre peticiones
-        const orig = await geocode(origenTxt);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 segundo de delay
+        // Soporte para origen por coordenadas (geolocalización rápida)
+        let orig;
+        if (overrideOriginCoords && typeof overrideOriginCoords.lat === 'number') {
+            orig = overrideOriginCoords; // {lat, lon}
+            // no hacemos delay en este caso
+            overrideOriginCoords = null; // consumir una vez
+        } else {
+            // Geocodificar con pequeño delay entre peticiones
+            orig = await geocode(origenTxt);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1 segundo de delay
+        }
         const dest = await geocode(destinoTxt);
         
-        // Pintar ruta (línea recta como aproximación)
+        // Obtener ruta real con OSRM (fallback a línea recta si falla)
+        let coords = [];
+        let totalKm = 0;
+        try {
+            const ruta = await obtenerRutaOSRM(orig, dest);
+            coords = ruta.coords; // [[lat,lon], ...]
+            totalKm = ruta.distanciaKm || longitudRutaKm(coords);
+        } catch (err) {
+            console.warn('OSRM falló, se usa línea recta:', err.message);
+            coords = [[orig.lat, orig.lon], [dest.lat, dest.lon]];
+            totalKm = haversineKm({lat:orig.lat, lon:orig.lon}, {lat:dest.lat, lon:dest.lon});
+        }
+
+        // Guardar ruta global
+        rutaCoordsLatLng = coords;
+        rutaTotalKm = totalKm;
+
+        // Pintar ruta
         capaRuta.clearLayers();
-        const poly = L.polyline([[orig.lat, orig.lon], [dest.lat, dest.lon]], {color:'#00e5ff'}).addTo(capaRuta);
+        const poly = L.polyline(coords, {color:'#00e5ff', weight:5}).addTo(capaRuta);
         mapa.fitBounds(poly.getBounds(), {padding:[30,30]});
 
-        // Filtrar estaciones cercanas a la "ruta" (aprox. línea recta)
-        const cercanas = estaciones.filter(e => {
-            const d = distancePointToSegmentKm({lat:e.latitud, lon:e.longitud}, {lat:orig.lat, lon:orig.lon}, {lat:dest.lat, lon:dest.lon});
-            return d <= bufferKm;
-        });
+        // Filtrar estaciones cercanas a la ruta y aplicar filtros de UI
+        const cercanasBase = estaciones.filter(e =>
+            distancePointToRouteKm({lat:e.latitud, lon:e.longitud}, coords) <= bufferKm
+        );
+        const cercanas = aplicarFiltros(cercanasBase);
         pintarEstaciones(cercanas);
 
-        // Sugerir paradas según autonomía
-        const totalKm = haversineKm({lat:orig.lat, lon:orig.lon}, {lat:dest.lat, lon:dest.lon});
+        // Sugerir paradas según autonomía a lo largo de la ruta
         const paradasNecesarias = Math.max(0, Math.ceil(totalKm / autoAutonomia) - 1);
         capaParadas.clearLayers();
         const sugeridas = [];
         for (let i=1; i<=paradasNecesarias; i++) {
             const t = i / (paradasNecesarias + 1);
-            const p = {lat: orig.lat + t*(dest.lat - orig.lat), lon: orig.lon + t*(dest.lon - orig.lon)};
-            // buscar estación cercana a p dentro de bufferKm
+            const p = puntoEnRutaPorFraccion(coords, t);
+            if (!p) continue;
             let mejor = null, mejorD = Infinity;
             cercanas.forEach(e => {
                 const d = haversineKm({lat:e.latitud, lon:e.longitud}, p);
                 if (d < mejorD) { mejorD = d; mejor = e; }
             });
             if (mejor && mejorD <= bufferKm) {
-                sugeridas.push(mejor);
+                if (!sugeridas.find(s => s.id === mejor.id)) sugeridas.push(mejor);
                 L.circleMarker([mejor.latitud, mejor.longitud], {radius:8, color:'#ffea00'}).addTo(capaParadas)
                   .bindTooltip('Parada sugerida: ' + mejor.nombre);
             } else {
-                // Marcar punto de parada teórica
                 L.circleMarker([p.lat, p.lon], {radius:6, color:'#ff4081'}).addTo(capaParadas)
                   .bindTooltip('Punto sin estación cercana');
             }
@@ -729,10 +1029,13 @@ function renderPanelEstaciones(lista, sugeridas) {
     }
     let html = '<table style="width:100%"><thead><tr><th>Estación</th><th>Tipo</th><th>Estado</th><th>Lat</th><th>Lon</th><th>Recomendada</th><th>Acciones</th></tr></thead><tbody>';
     lista.forEach(c => {
-        html += `<tr>
+        const est = String(c.estado||'').toLowerCase();
+        const rowClass = est ? `row-estado-${est.replace(/\s+/g,'-')}` : '';
+        const estadoBadge = `<span class="estado-badge ${est ? ('estado-' + est.replace(/\s+/g,'-')) : ''}">${c.estado || '-'}</span>`;
+        html += `<tr class="${rowClass}">
             <td>${c.nombre}</td>
             <td>${c.tipo || '-'}</td>
-            <td>${c.estado || '-'}</td>
+            <td>${estadoBadge}</td>
             <td>${Number(c.latitud).toFixed(5)}</td>
             <td>${Number(c.longitud).toFixed(5)}</td>
             <td>${sugSet.has(c.id) ? 'Sí' : '-'}</td>
@@ -821,6 +1124,8 @@ document.addEventListener('click', function(e){
         }).then(r=>r.json()).then(resp => {
             if (!resp || !resp.exito) { alert('No se pudo cancelar'); return; }
             listarReservas();
+            // Refrescar estaciones para liberar el estado si corresponde
+            if (typeof cargarCargadores === 'function') cargarCargadores();
         })
     }
 });
@@ -868,12 +1173,157 @@ document.getElementById('formReserva').addEventListener('submit', function(e){
         body: JSON.stringify({accion:'crear', cargador_id, inicio, fin})
     }).then(r=>r.json()).then(resp => {
         alert(resp.mensaje || (resp.exito ? 'Reserva creada' : 'No se pudo crear la reserva'));
-        if (resp.exito) { listarReservas(); modalReserva.style.display = 'none'; }
+        if (resp.exito) { 
+            listarReservas(); 
+            // Refrescar estaciones para reflejar estado "ocupado" en tiempo real si corresponde
+            if (typeof cargarCargadores === 'function') cargarCargadores();
+            modalReserva.style.display = 'none'; 
+        }
     }).catch(()=> alert('Error de red'));
 });
 
 // Buscar ruta botón
-document.getElementById('btnBuscarRuta').addEventListener('click', trazarRutaYSugerir);
+// Buscar ruta botón
+// Listener antiguo eliminado: solo agregar si existe el botón
+const btnBuscarRuta = document.getElementById('btnBuscarRuta');
+if (btnBuscarRuta) {
+    btnBuscarRuta.addEventListener('click', () => {
+        console.log('[UI] Click en btnBuscarRuta');
+        trazarRutaYSugerir();
+    });
+}
+
+// --- Quick-bar: geolocalización y planificación rápida ---
+document.getElementById('btnMiUbic')?.addEventListener('click', function(){
+    console.log('[Geoloc] Click en usar mi ubicación');
+    if (!navigator.geolocation) { alert('Geolocalización no soportada por el navegador'); return; }
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = '📡 Obteniendo...';
+    navigator.geolocation.getCurrentPosition(function(pos){
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        currentLocation = {lat, lon};
+        overrideOriginCoords = {lat, lon};
+        document.getElementById('q_origen').value = 'Mi ubicación actual';
+        document.getElementById('origen').value = 'Mi ubicación actual';
+        console.log('[Geoloc] Coordenadas obtenidas:', currentLocation);
+        btn.disabled = false;
+        btn.textContent = '📍 Usar mi ubicación';
+    }, function(err){
+        alert('No se pudo obtener la ubicación: ' + err.message);
+        console.warn('[Geoloc] Error:', err);
+        btn.disabled = false;
+        btn.textContent = '📍 Usar mi ubicación';
+    }, { enableHighAccuracy: true, timeout: 10000 });
+});
+
+document.getElementById('btnPlanificarQuick')?.addEventListener('click', function(){
+    console.log('[QuickBar] Click en Planificar ruta');
+    // Copiar valores de la barra rápida a los campos internos
+    const qorig = document.getElementById('q_origen')?.value?.trim();
+    const qdest = document.getElementById('q_destino')?.value?.trim();
+    document.getElementById('origen').value = qorig;
+    document.getElementById('destino').value = qdest;
+    // Si el usuario escribió manualmente, quitamos overrideOriginCoords
+    if (qorig !== 'Mi ubicación actual') overrideOriginCoords = null;
+
+    // Cargar autos si el selector está vacío
+    const autoSel = document.getElementById('autoSelector');
+    if (autoSel && autoSel.options.length <= 1) {
+        fetch('../api/autos.php')
+          .then(r => r.json())
+          .then(autos => {
+            autoSel.innerHTML = '<option value="">Seleccioná un auto…</option>';
+            autos.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = `${a.marca} ${a.modelo} (${a.anio})`;
+                opt.dataset.autonomia = a.autonomia || 0;
+                opt.dataset.conector = a.conector || '';
+                autoSel.appendChild(opt);
+            });
+            if (autoSel.options.length === 2) autoSel.selectedIndex = 1;
+            if (!autoSel.value) {
+                alert('No tenés autos cargados. Agregá uno en la pestaña Autos.');
+                return;
+            }
+            lanzarPlanificacion();
+          });
+        return;
+    }
+    // Seleccionar auto automáticamente si hay solo uno
+    if (autoSel && autoSel.options.length === 2) {
+        autoSel.selectedIndex = 1;
+    }
+    if (autoSel && !autoSel.value) {
+        alert('Seleccioná un auto para planificar la ruta');
+        autoSel.focus();
+        return;
+    }
+    if (!qorig) { alert('Ingresá un origen'); console.warn('[QuickBar] Falta origen'); return; }
+    if (!qdest) { alert('Ingresá un destino'); console.warn('[QuickBar] Falta destino'); return; }
+    lanzarPlanificacion();
+});
+
+function lanzarPlanificacion() {
+    // Lanzar la búsqueda (toma overrideOriginCoords si está seteado)
+    trazarRutaYSugerir();
+}
+
+// Si se hace click en un marcador para "Reservar" la estación, abrimos el planificador modal o quick flow
+function planificarParaEstacion(id) {
+    // guardar selección para intentar reservar una vez trazada la ruta
+    estacionSeleccionadaParaReserva = id;
+    // Abrir el modal planificador si existe
+    const modalPlan = document.getElementById('modalPlan');
+    if (modalPlan) {
+        modalPlan.style.display = 'block';
+        // preseleccionar el destino en el modal (si el DOM del modal tiene #destino)
+        const destField = document.getElementById('destino');
+        const est = estaciones.find(e => String(e.id) === String(id));
+        if (est && destField) destField.value = `${est.nombre}`;
+        return;
+    }
+    // Si no hay modal, usamos la quick-bar: rellenar destino y abrir la búsqueda
+    const est2 = estaciones.find(e => String(e.id) === String(id));
+    if (est2) {
+        document.getElementById('q_destino').value = est2.nombre || '';
+        trazarRutaYSugerir();
+    }
+}
+
+// Reaplicar filtros cuando cambian
+['filtroTipo','filtroEstado','filtroConector','filtroCompatibleAuto','autoSelector'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+        if (id === 'autoSelector') {
+            const sel = /** @type {HTMLSelectElement} */(el);
+            if (sel.value) {
+                const o = sel.selectedOptions[0];
+                document.getElementById('autoResumen').textContent = `🚗 Usando auto: ${o.textContent} | Autonomía: ${o.dataset.autonomia} km`;
+            } else {
+                document.getElementById('autoResumen').textContent = 'Seleccioná un auto (se usará el primero si no elegís)';
+            }
+        }
+        if (!rutaCoordsLatLng.length) {
+            // Sin ruta: solo repinta y panel con filtros aplicados sobre todas
+            const filtradas = aplicarFiltros(estaciones);
+            pintarEstaciones(filtradas);
+            renderPanelEstaciones(filtradas, []);
+            return;
+        }
+        const bufferKm = parseFloat(document.getElementById('bufferKm')?.value || '5');
+        const cercanasBase = estaciones.filter(e =>
+            distancePointToRouteKm({lat:e.latitud, lon:e.longitud}, rutaCoordsLatLng) <= bufferKm
+        );
+        const cercanas = aplicarFiltros(cercanasBase);
+        pintarEstaciones(cercanas);
+        // No recalculamos sugeridas aquí para mantener número de paradas; se volverán a calcular al buscar ruta
+        renderPanelEstaciones(cercanas, []);
+    });
+});
     </script>
     <!-- Leaflet JS -->
     <script

@@ -80,7 +80,35 @@ switch ($method) {
             $nombre = $_POST['nombre'] ?? '';
             $latitud = $_POST['latitud'] ?? '';
             $longitud = $_POST['longitud'] ?? '';
-            echo json_encode(agregarCargador($nombre, $latitud, $longitud));
+            $descripcion = $_POST['descripcion'] ?? '';
+            $tipo = $_POST['tipo'] ?? '';
+            $estado = $_POST['estado'] ?? 'disponible';
+            $potencia_kw = $_POST['potencia_kw'] ?? 0;
+            $conectores = $_POST['conectores'] ?? '';
+            echo json_encode(agregarCargador($nombre, $latitud, $longitud, $descripcion, $tipo, $estado, $potencia_kw, $conectores));
+        } elseif (isset($_POST['modificar_cargador'])) {
+            $id = $_POST['id'] ?? null;
+            $nombre = $_POST['nombre'] ?? '';
+            $latitud = $_POST['latitud'] ?? null;
+            $longitud = $_POST['longitud'] ?? null;
+            $descripcion = $_POST['descripcion'] ?? '';
+            $tipo = $_POST['tipo'] ?? '';
+            $estado = $_POST['estado'] ?? 'disponible';
+            $potencia_kw = $_POST['potencia_kw'] ?? 0;
+            $conectores = $_POST['conectores'] ?? '';
+            
+            // Si no se proporciona latitud/longitud, obtenerlos del registro actual
+            if ($latitud === null || $longitud === null) {
+                require_once __DIR__ . '/../modelo/Cargador.php';
+                $cargadorModel = new Cargador();
+                $cargadorActual = $cargadorModel->obtener($id);
+                if ($cargadorActual) {
+                    $latitud = $latitud ?? $cargadorActual['latitud'];
+                    $longitud = $longitud ?? $cargadorActual['longitud'];
+                }
+            }
+            
+            echo json_encode(modificarCargador($id, $nombre, $latitud, $longitud, $descripcion, $tipo, $estado, $potencia_kw, $conectores));
         } elseif (isset($_POST['eliminar_cargador'])) {
             $id = $_POST['id'] ?? null;
             echo json_encode(eliminarCargador($id));

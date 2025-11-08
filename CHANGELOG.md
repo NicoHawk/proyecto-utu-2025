@@ -1,5 +1,122 @@
 # 📋 Changelog - Sistema de Gestión de Autos Eléctricos
 
+## Versión 1.7.0 - 7 de Noviembre de 2025
+
+### 🎯 Cambios Principales
+
+#### 🧭 Barra rápida de planificación y geolocalización
+- Nueva barra rápida encima del mapa para ingresar Origen/Destino y planificar en 1 click.
+- Botón "📍 Usar mi ubicación" con geolocalización del navegador y origen auto‑rellenado.
+- Campos internos sincronizados (inputs ocultos `#origen` y `#destino`) para evitar inconsistencias.
+- Validaciones claras: origen/destino requeridos, radio entre 1–50 km y auto con autonomía.
+- Mensajes de error/alertas amistosos y logs de depuración en consola: `[QuickBar]`, `[Geoloc]`, `[Planificar]`.
+
+#### 🚘 Selector de auto visible y flujo sin fricción
+- Selector de auto del usuario visible debajo de la barra rápida, con resumen del auto elegido.
+- Carga automática de autos al abrir la pestaña Viajes; si hay un solo auto, se selecciona solo.
+- El checkbox “Solo compatibles con mi auto” usa el conector del auto seleccionado.
+- Auto‑selección y foco cuando falta elegir, evitando bloqueos de planificación.
+
+#### 🚗 Sistema de Ruteo Real con OSRM
+- **Planificación de viajes mejorada en panel cliente**
+  - Integración con OSRM (Open Source Routing Machine) para rutas reales
+  - Reemplazo de cálculo de línea recta por trazado vial real
+  - Cálculo preciso de distancia en km y duración estimada
+  - Fallback automático a línea recta si OSRM no está disponible
+  - Polyline completa dibujada en Leaflet con estilo mejorado
+
+#### 🔍 Sistema de Filtros de Estaciones
+- **Filtros dinámicos en panel de viajes**
+  - Filtro por **Tipo de cargador** (poblado dinámicamente desde DB)
+  - Filtro por **Estado** (disponible, ocupado, mantenimiento, etc.)
+  - Filtro por **Tipo de conector** (Tipo 1, Tipo 2, CCS, CHAdeMO, etc.)
+  - Checkbox **"Solo compatibles con mi auto"** (filtra por conector del vehículo seleccionado)
+  - Reaplicación automática de filtros al cambiar cualquier criterio
+  - Integración completa con sistema de búsqueda de rutas
+
+#### 🗺️ Mapa y popups mejorados
+- Marcadores con popup compacto: nombre, dirección/desc., conectores, potencia y estado.
+- Acciones directas desde el popup: "Reservar" y "Ver" (abre modal de detalle).
+- Trazado de ruta con Leaflet; zoom automático al encuadre del recorrido.
+
+#### 🎯 Sugerencias Inteligentes de Paradas
+- **Cálculo basado en ruta real**
+  - Sugerencias de paradas a lo largo de la ruta (no solo en línea recta)
+  - Puntos calculados por fracción de distancia recorrida
+  - Consideración de autonomía del vehículo seleccionado
+  - Marcadores visuales:
+    - 🟡 Amarillo: Paradas sugeridas con estación cercana
+    - 🔴 Rosa: Puntos sin estación en el radio configurado
+  - Tabla con columna "Recomendada" para identificar sugerencias
+
+#### 🧩 Cambios de layout
+- El título "Estaciones disponibles" se movió debajo del mapa para priorizar el contenido visual.
+- Separadores y márgenes ajustados para mejor legibilidad.
+
+#### 🔐 Sistema Automático de Gestión de Estados
+- **Estados de cargadores gestionados por reservas**
+  - Al **crear una reserva**: El cargador pasa automáticamente a **"ocupado"**
+  - Al **cancelar una reserva**: El cargador vuelve a **"disponible"** (si no hay otras reservas activas)
+  - Al **listar cargadores**: Sistema libera automáticamente cargadores cuyas reservas finalizaron
+  - Métodos nuevos en modelo/Cargador.php:
+    - `actualizarEstado($id, $estado)`: Actualiza estado de un cargador
+    - `liberarCargadoresVencidos()`: Libera cargadores con reservas vencidas
+    - `tieneReservaActiva($id)`: Verifica si hay reservas activas vigentes
+  - Modificaciones en modelo/Reserva.php:
+    - `crear()`: Marca cargador como ocupado tras reserva exitosa
+    - `cancelar()`: Libera cargador si no quedan reservas activas
+  - **Estados soportados:**
+    - `disponible`: Libre para reservar
+    - `ocupado`: Con reserva activa (gestionado automáticamente)
+    - `mantenimiento`: Inhabilitado manualmente
+    - `fuera de servicio`: Inhabilitado manualmente
+  - Documentación completa en `GESTION_ESTADOS_CARGADORES.md`
+
+#### 📐 Funciones de Cálculo Geométrico
+- **Nuevas funciones de geometría en cliente.php**
+  - `distancePointToRouteKm(p, routeLatLng)`: Distancia mínima de punto a polilínea
+  - `longitudRutaKm(routeLatLng)`: Longitud total de ruta en km
+  - `puntoEnRutaPorFraccion(routeLatLng, fraccion)`: Punto en ruta según fracción [0,1]
+  - `obtenerRutaOSRM(orig, dest)`: Llamada a servicio OSRM con geometría completa
+
+### 📝 Archivos Modificados
+
+#### Vista Cliente
+- `vista/cliente.php`:
+  - Barra rápida (origen/destino/geolocalización/planificar) y selector visible de auto con resumen.
+  - Inputs ocultos `#origen` y `#destino` para unificar el flujo interno.
+  - Barra de filtros agregada con 4 criterios
+  - Integración OSRM para ruteo real
+  - Funciones `aplicarFiltros()` y `poblarFiltros()`
+  - Listeners de cambio en filtros para reaplicación dinámica
+  - Cálculo de paradas basado en ruta real (no línea recta)
+  - Encabezado "Estaciones disponibles" reposicionado debajo del mapa
+
+#### Modelo
+- `modelo/Cargador.php`:
+  - `actualizarEstado()`, `liberarCargadoresVencidos()`, `tieneReservaActiva()`
+- `modelo/Reserva.php`:
+  - Require de `Cargador.php` agregado
+  - Lógica de actualización de estado en `crear()` y `cancelar()`
+
+#### Controlador
+- `controlador/CargadorControlador.php`:
+  - `listarCargadores()` ahora ejecuta `liberarCargadoresVencidos()` antes de listar
+
+### 🐛 Correcciones
+- Cálculo de estaciones cercanas ahora usa distancia a toda la polilínea (no solo un segmento).
+- Filtro de conectores soporta formato CSV y arrays en campo `conectores`.
+- Manejo correcto de reservas solapadas (no permite conflictos).
+- Fallback robusto a línea recta si OSRM falla o no responde.
+- Botón “Planificar ruta” no reaccionaba si no había auto seleccionado: ahora auto‑selecciona si hay uno solo y muestra guía si no hay autos.
+- Handler huérfano de un botón legacy (`#btnBuscarRuta`) causaba fallo de JS y rompía otros clicks: se agregó verificación antes de registrar el listener.
+- Geolocalización robusta: actualización sincronizada de la barra rápida y campos internos; mensajes claros si el navegador deniega permisos.
+
+### 📚 Documentación Nueva
+- `GESTION_ESTADOS_CARGADORES.md`: Explicación completa del sistema de estados automáticos
+
+---
+
 ## Versión 1.6.0 - 5 de Noviembre de 2025
 
 ### 🎯 Cambios Principales

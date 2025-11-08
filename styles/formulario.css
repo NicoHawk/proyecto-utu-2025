@@ -64,6 +64,14 @@ input[type="text"], input[type="password"], input[type="email"], input[type="num
 }
 input:focus, select:focus { outline: none; border-color: #1f4ccd; box-shadow: 0 0 0 3px rgba(31,76,205,0.12); }
 
+/* Checkboxes personalizados */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #1f4ccd;
+}
+
 button {
     padding: 10px 16px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 600; color: #fff;
     background: linear-gradient(90deg, #1f4ccd 60%, #3ba8ff 100%);
@@ -77,6 +85,7 @@ li { background: #fff; border: 1px solid #e6eef5; border-radius: 10px; padding: 
 .usuario-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .btn-editar { background: #ffb300; color: #fff; }
 .btn-guardar { background: #43a047; color: #fff; }
+.btn-cancelar { background: #757575; color: #fff; }
 .btn-eliminar { background: #e53935; color: #fff; }
 
 table { width: 100%; border-collapse: collapse; }
@@ -125,4 +134,16 @@ th { background: #eef4ff; color: #1f4ccd; }
         transform: translateX(0);
         opacity: 1;
     }
+}
+
+/* Resaltado temporal del mapa al hacer scroll con "Ver" */
+#map.map-highlight {
+    box-shadow: 0 0 0 3px rgba(31, 76, 205, 0.35), 0 0 24px rgba(31, 76, 205, 0.25);
+    border-radius: 12px;
+    animation: mapPulse 1.2s ease-out 1;
+}
+@keyframes mapPulse {
+    0% { box-shadow: 0 0 0 0 rgba(31, 76, 205, 0.45), 0 0 0 rgba(31, 76, 205, 0.0); }
+    70% { box-shadow: 0 0 0 8px rgba(31, 76, 205, 0.18), 0 0 36px rgba(31, 76, 205, 0.25); }
+    100% { box-shadow: 0 0 0 0 rgba(31, 76, 205, 0.0), 0 0 0 rgba(31, 76, 205, 0.0); }
 }

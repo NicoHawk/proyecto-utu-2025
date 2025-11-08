@@ -111,14 +111,77 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
             <div id="listaAutos" style="margin-top: 20px;"></div>
         </div>
         <div class="tab-content" id="tab-cargadores" style="display:none;">
-            <h2 style="margin-bottom: 10px; color:#1976d2; text-align:center;">Mapa de cargadores</h2>
+            <h1>Gestión de Cargadores</h1>
+            <p style="color: #64b5f6; text-shadow: 1px 1px 4px #222;">Administra los puntos de carga eléctrica</p>
+
+            <h2 style="margin-bottom: 10px; color:#1976d2; margin-top:40px;">Mapa de cargadores</h2>
             <div id="map" style="width:100%; min-width:300px; height:340px; margin-bottom: 20px; border-radius: 16px; box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.13);"></div>
-            <form id="formCargador" style="display: flex; gap: 10px; align-items: center; width:100%; margin-bottom:18px;">
-                <input type="text" id="nombreCargador" placeholder="Nombre del cargador" required style="flex:1;">
-                <button type="submit" disabled style="min-width:140px;">Agregar cargador</button>
-                <span id="ubicacionSeleccionada" style="font-size: 0.9em; color: #555;"></span>
+            
+            <h2 style="margin-top:40px;">Agregar Cargador</h2>
+            <p style="font-size:0.9em; color:#666; margin-bottom:12px;">Haz clic en el mapa para seleccionar la ubicación del cargador</p>
+            
+            <form id="formCargador" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width:100%; margin-bottom:18px;">
+                <input type="text" id="nombreCargador" placeholder="Nombre del cargador" required style="grid-column: 1 / -1;">
+                
+                <input type="text" id="descripcionCargador" placeholder="Descripción (opcional)" style="grid-column: 1 / -1;">
+                
+                <select id="tipoCargador" required>
+                    <option value="">Tipo de cargador</option>
+                    <option value="AC Lento">AC Lento (3-7 kW)</option>
+                    <option value="AC Rápido">AC Rápido (7-22 kW)</option>
+                    <option value="DC Rápido">DC Rápido (50+ kW)</option>
+                    <option value="DC Ultra Rápido">DC Ultra Rápido (150+ kW)</option>
+                </select>
+                
+                <input type="number" id="potenciaCargador" placeholder="Potencia (kW)" min="0" step="0.1" required>
+                
+                <select id="estadoCargador" required>
+                    <option value="disponible">Disponible</option>
+                    <option value="ocupado">Ocupado</option>
+                    <option value="mantenimiento">En mantenimiento</option>
+                    <option value="fuera_de_servicio">Fuera de servicio</option>
+                </select>
+                
+                <div style="grid-column: 1 / -1;">
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#1976d2;">Tipos de conectores disponibles:</label>
+                    <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px;">
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" name="conectores" value="Tipo 1" class="conector-checkbox">
+                            <span>Tipo 1 (SAE J1772)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" name="conectores" value="Tipo 2" class="conector-checkbox">
+                            <span>Tipo 2 (Mennekes)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" name="conectores" value="CCS Combo 1" class="conector-checkbox">
+                            <span>CCS Combo 1</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" name="conectores" value="CCS Combo 2" class="conector-checkbox">
+                            <span>CCS Combo 2</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" name="conectores" value="CHAdeMO" class="conector-checkbox">
+                            <span>CHAdeMO</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" name="conectores" value="Tesla (NACS)" class="conector-checkbox">
+                            <span>Tesla (NACS)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" name="conectores" value="GB/T" class="conector-checkbox">
+                            <span>GB/T</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" disabled style="grid-column: 1 / -1; min-width:140px;">Agregar cargador</button>
+                <span id="ubicacionSeleccionada" style="grid-column: 1 / -1; font-size: 0.9em; color: #555;"></span>
             </form>
-            <div id="listaCargadores" style="margin-top: 0; width:100%; max-width:600px;"></div>
+
+            <h2 style="margin-top:40px;">Listado de Cargadores</h2>
+            <div id="tablaCargadores"></div>
         </div>
     </div>
 
@@ -154,6 +217,12 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                             if (window.lastCenter) map.setCenter(window.lastCenter);
                         } catch (e) { /* ignorar */ }
                     }, 200);
+                    // Cargar lista de cargadores
+                    fetch('../api/cargadores.php')
+                        .then(res => res.json())
+                        .then(cargadores => {
+                            mostrarListaCargadores(cargadores);
+                        });
                 }
                 // Cargar autos y usuarios si se abre la pestaña de autos
                 if (tab === 'autos') {
@@ -241,30 +310,122 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
 
     // Mostrar la lista de cargadores con botón para centrar el mapa
     function mostrarListaCargadores(cargadores) {
-        const listaDiv = document.getElementById('listaCargadores');
+        const tablaDiv = document.getElementById('tablaCargadores');
         if (cargadores.length === 0) {
-            listaDiv.innerHTML = "<p>No hay cargadores registrados.</p>";
+            tablaDiv.innerHTML = "<p>No hay cargadores registrados.</p>";
             return;
         }
-        let html = "<h3>Lista de cargadores</h3><ul style='list-style:none;padding:0;'>";
+        
+        let html = `<table style="width:100%;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Tipo</th>
+                    <th>Potencia (kW)</th>
+                    <th>Estado</th>
+                    <th>Conectores</th>
+                    <th>Ubicación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>`;
+        
         cargadores.forEach(cargador => {
-            html += `<li style="margin-bottom:10px;">
-                <strong>${cargador.nombre}</strong>
-                <button onclick="centrarEnCargador(${cargador.id})" style="margin-left:10px;">Ver en mapa</button>
-                <button onclick="eliminarCargador(${cargador.id})" style="margin-left:10px; background:#e53935; color:#fff; border:none; border-radius:4px; padding:5px 10px; cursor:pointer;">Eliminar</button>
-            </li>`;
+            html += `<tr data-id="${cargador.id}">
+                <td>${cargador.id}</td>
+                <td>
+                    <span id="nombre-${cargador.id}">${cargador.nombre}</span>
+                    <input type="text" id="input-nombre-${cargador.id}" value="${cargador.nombre}" style="display:none; width:95%;">
+                </td>
+                <td>
+                    <span id="descripcion-${cargador.id}">${cargador.descripcion || '-'}</span>
+                    <input type="text" id="input-descripcion-${cargador.id}" value="${cargador.descripcion || ''}" style="display:none; width:95%;">
+                </td>
+                <td>
+                    <span id="tipo-${cargador.id}">${cargador.tipo || '-'}</span>
+                    <select id="input-tipo-${cargador.id}" style="display:none; width:95%;">
+                        <option value="">-</option>
+                        <option value="AC Lento" ${cargador.tipo === 'AC Lento' ? 'selected' : ''}>AC Lento</option>
+                        <option value="AC Rápido" ${cargador.tipo === 'AC Rápido' ? 'selected' : ''}>AC Rápido</option>
+                        <option value="DC Rápido" ${cargador.tipo === 'DC Rápido' ? 'selected' : ''}>DC Rápido</option>
+                        <option value="DC Ultra Rápido" ${cargador.tipo === 'DC Ultra Rápido' ? 'selected' : ''}>DC Ultra Rápido</option>
+                    </select>
+                </td>
+                <td>
+                    <span id="potencia-${cargador.id}">${cargador.potencia_kw}</span>
+                    <input type="number" id="input-potencia-${cargador.id}" value="${cargador.potencia_kw}" min="0" step="0.1" style="display:none; width:80px;">
+                </td>
+                <td>
+                    <span id="estado-${cargador.id}">${cargador.estado}</span>
+                    <select id="input-estado-${cargador.id}" style="display:none; width:95%;">
+                        <option value="disponible" ${cargador.estado === 'disponible' ? 'selected' : ''}>Disponible</option>
+                        <option value="ocupado" ${cargador.estado === 'ocupado' ? 'selected' : ''}>Ocupado</option>
+                        <option value="mantenimiento" ${cargador.estado === 'mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
+                        <option value="fuera_de_servicio" ${cargador.estado === 'fuera_de_servicio' ? 'selected' : ''}>Fuera de servicio</option>
+                    </select>
+                </td>
+                <td>
+                    <span id="conectores-${cargador.id}" style="font-size:0.85em;">${cargador.conectores || '-'}</span>
+                    <div id="input-conectores-${cargador.id}" style="display:none;">
+                        <label style="display:block; font-size:0.8em;"><input type="checkbox" value="Tipo 1" ${(cargador.conectores || '').includes('Tipo 1') ? 'checked' : ''}> Tipo 1</label>
+                        <label style="display:block; font-size:0.8em;"><input type="checkbox" value="Tipo 2" ${(cargador.conectores || '').includes('Tipo 2') ? 'checked' : ''}> Tipo 2</label>
+                        <label style="display:block; font-size:0.8em;"><input type="checkbox" value="CCS Combo 1" ${(cargador.conectores || '').includes('CCS Combo 1') ? 'checked' : ''}> CCS 1</label>
+                        <label style="display:block; font-size:0.8em;"><input type="checkbox" value="CCS Combo 2" ${(cargador.conectores || '').includes('CCS Combo 2') ? 'checked' : ''}> CCS 2</label>
+                        <label style="display:block; font-size:0.8em;"><input type="checkbox" value="CHAdeMO" ${(cargador.conectores || '').includes('CHAdeMO') ? 'checked' : ''}> CHAdeMO</label>
+                        <label style="display:block; font-size:0.8em;"><input type="checkbox" value="Tesla (NACS)" ${(cargador.conectores || '').includes('Tesla (NACS)') ? 'checked' : ''}> Tesla</label>
+                        <label style="display:block; font-size:0.8em;"><input type="checkbox" value="GB/T" ${(cargador.conectores || '').includes('GB/T') ? 'checked' : ''}> GB/T</label>
+                    </div>
+                </td>
+                <td style="font-size:0.8em;">
+                    ${cargador.latitud.toFixed(4)}, ${cargador.longitud.toFixed(4)}
+                    <br><button onclick="centrarEnCargador(${cargador.id})" style="margin-top:4px; font-size:0.8em; padding:4px 8px;">📍 Ver</button>
+                </td>
+                <td>
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <button class="btn-editar" onclick="editarCargador(${cargador.id})" id="btn-editar-${cargador.id}">Editar</button>
+                        <button class="btn-guardar" onclick="guardarCargador(${cargador.id})" style="display:none;" id="btn-guardar-${cargador.id}">Guardar</button>
+                        <button class="btn-cancelar" onclick="cancelarEditarCargador(${cargador.id})" style="display:none;" id="btn-cancelar-${cargador.id}">Cancelar</button>
+                        <button class="btn-eliminar" onclick="eliminarCargador(${cargador.id})" id="btn-eliminar-${cargador.id}">Eliminar</button>
+                    </div>
+                </td>
+            </tr>`;
         });
-        html += "</ul>";
-        listaDiv.innerHTML = html;
+        
+        html += `</tbody></table>`;
+        tablaDiv.innerHTML = html;
     }
 
-    // Función global para centrar el mapa en el cargador
+    // Función global para centrar el mapa en el cargador y hacer scroll automático al mapa
     window.centrarEnCargador = function(id) {
         const marcador = marcadores[id];
+        const mapEl = document.getElementById('map');
+        if (!mapEl) return;
+
+        // Desplazar suavemente hasta el mapa
+        mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Resaltar el mapa brevemente
+        mapEl.classList.add('map-highlight');
+        setTimeout(() => mapEl.classList.remove('map-highlight'), 1500);
+
         if (marcador) {
-            map.setCenter(marcador.getPosition());
-            map.setZoom(16);
-            new google.maps.event.trigger(marcador, 'click');
+            // Asegurar que el mapa calcule bien su tamaño luego del scroll
+            setTimeout(() => {
+                try { google.maps.event.trigger(map, 'resize'); } catch (e) {}
+                map.setCenter(marcador.getPosition());
+                map.setZoom(16);
+                // Abrir popup del marcador
+                try { new google.maps.event.trigger(marcador, 'click'); } catch (e) {}
+                // Hacer rebotar el marcador brevemente para llamar la atención
+                try {
+                    if (google.maps && google.maps.Animation && marcador.setAnimation) {
+                        marcador.setAnimation(google.maps.Animation.BOUNCE);
+                        setTimeout(() => marcador.setAnimation(null), 1400);
+                    }
+                } catch (e) {}
+            }, 350);
         }
     };
 
@@ -286,11 +447,25 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
             e.preventDefault();
             if (ubicacionTemporal) {
                 const nombre = document.getElementById("nombreCargador").value;
+                const descripcion = document.getElementById("descripcionCargador").value;
+                const tipo = document.getElementById("tipoCargador").value;
+                const potencia = document.getElementById("potenciaCargador").value;
+                const estado = document.getElementById("estadoCargador").value;
+                
+                // Obtener los conectores seleccionados
+                const conectoresCheckboxes = document.querySelectorAll('.conector-checkbox:checked');
+                const conectores = Array.from(conectoresCheckboxes).map(cb => cb.value).join(', ');
+                
+                if (!conectores) {
+                    mostrarMensaje('Debes seleccionar al menos un tipo de conector', 'error');
+                    return;
+                }
+                
                 // Guardar en la base de datos
                 fetch('../api/admin.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: `agregar_cargador=1&nombre=${encodeURIComponent(nombre)}&latitud=${encodeURIComponent(ubicacionTemporal.lat())}&longitud=${encodeURIComponent(ubicacionTemporal.lng())}`
+                    body: `agregar_cargador=1&nombre=${encodeURIComponent(nombre)}&latitud=${encodeURIComponent(ubicacionTemporal.lat())}&longitud=${encodeURIComponent(ubicacionTemporal.lng())}&descripcion=${encodeURIComponent(descripcion)}&tipo=${encodeURIComponent(tipo)}&estado=${encodeURIComponent(estado)}&potencia_kw=${encodeURIComponent(potencia)}&conectores=${encodeURIComponent(conectores)}`
                 })
                 .then(res => res.json())
                 .then(res => {
@@ -327,6 +502,7 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
 
     document.getElementById("formulario").innerHTML = `
         <input type="text" id="nombre" placeholder="Nombre de usuario" required>
+        <input type="email" id="correo" placeholder="Correo electrónico" required>
         <input type="password" id="password" placeholder="Contraseña" required>
         <select id="tipo_usuario" required>
             <option value="cliente">Cliente</option>
@@ -339,18 +515,20 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
     document.getElementById("formulario").addEventListener("submit", function (e) {
         e.preventDefault();
         const nombre = document.getElementById("nombre").value;
+        const correo = document.getElementById("correo").value;
         const password = document.getElementById("password").value;
         const tipo_usuario = document.getElementById("tipo_usuario").value;
     fetch("../api/admin.php", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `agregar_usuario=1&username=${encodeURIComponent(nombre)}&password=${encodeURIComponent(password)}&tipo_usuario=${encodeURIComponent(tipo_usuario)}`
+            body: `agregar_usuario=1&username=${encodeURIComponent(nombre)}&correo=${encodeURIComponent(correo)}&password=${encodeURIComponent(password)}&tipo_usuario=${encodeURIComponent(tipo_usuario)}`
         })
             .then(res => res.json())
             .then(data => {
                 mostrarMensaje(data.mensaje, data.mensaje.toLowerCase().includes('error') ? 'error' : 'exito');
                 // Limpiar campos del formulario
                 document.getElementById("nombre").value = "";
+                document.getElementById("correo").value = "";
                 document.getElementById("password").value = "";
                 document.getElementById("tipo_usuario").value = "cliente";
                 listar(); // recargar lista
@@ -380,9 +558,10 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                                     <option value="cargador" ${usuario.tipo_usuario === 'cargador' ? 'selected' : ''}>Cargador</option>
                                 </select>
                             </div>
-                            <button class="btn-editar" onclick="editar('${usuario.usuario}')">Editar</button>
+                            <button class="btn-editar" onclick="editar('${usuario.usuario}')" id="btn-editar-${usuario.usuario}">Editar</button>
                             <button class="btn-guardar" onclick="guardar('${usuario.usuario}')" style="display:none;" id="guardar-${usuario.usuario}">Guardar</button>
-                            <button class="btn-eliminar" onclick="eliminar('${usuario.usuario}')">Eliminar</button>
+                            <button class="btn-cancelar" onclick="cancelar('${usuario.usuario}')" style="display:none;" id="cancelar-${usuario.usuario}">Cancelar</button>
+                            <button class="btn-eliminar" onclick="eliminar('${usuario.usuario}')" id="btn-eliminar-${usuario.usuario}">Eliminar</button>
                         </li>`;
                 });
                 document.getElementById("resultado").innerHTML = html;
@@ -398,6 +577,9 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
         document.getElementById(`input-pass-${nombre}`).style.display = 'inline-block';
         document.getElementById(`input-tipo-${nombre}`).style.display = 'inline-block';
         document.getElementById(`guardar-${nombre}`).style.display = 'inline-block';
+        document.getElementById(`cancelar-${nombre}`).style.display = 'inline-block';
+        document.getElementById(`btn-editar-${nombre}`).style.display = 'none';
+        document.getElementById(`btn-eliminar-${nombre}`).style.display = 'none';
     }
 
     window.guardar = function (nombre) {
@@ -421,6 +603,10 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                 mostrarMensaje(data.mensaje, data.mensaje.toLowerCase().includes('error') ? 'error' : 'exito');
                 listar();
             });
+    }
+
+    window.cancelar = function (nombre) {
+        listar();
     }
 
     window.eliminar = function (nombre) {
@@ -459,19 +645,91 @@ if ($_SESSION['tipo_usuario'] !== 'admin') {
                             Object.values(marcadores).forEach(m => m.setMap(null));
                             marcadores = {};
                             cargadores.forEach(cargador => {
-                                agregarCargador(
-                                    cargador.id,
-                                    cargador.nombre,
-                                    {lat: parseFloat(cargador.latitud), lng: parseFloat(cargador.longitud)}
-                                );
+                                agregarCargador(cargador.id, cargador.nombre, {lat: parseFloat(cargador.latitud), lng: parseFloat(cargador.longitud)});
                             });
                         });
                 } else {
-                    mostrarMensaje(res.mensaje || 'No se pudo eliminar el cargador', 'error');
+                    mostrarMensaje(res.mensaje || 'Error al eliminar', 'error');
                 }
             })
-            .catch(() => mostrarMensaje('Error de conexión al eliminar el cargador', 'error'));
+            .catch(() => mostrarMensaje('Error de conexión', 'error'));
         }
+    }
+
+    // Función para editar cargador
+    window.editarCargador = function(id) {
+        document.getElementById(`nombre-${id}`).style.display = 'none';
+        document.getElementById(`descripcion-${id}`).style.display = 'none';
+        document.getElementById(`tipo-${id}`).style.display = 'none';
+        document.getElementById(`potencia-${id}`).style.display = 'none';
+        document.getElementById(`estado-${id}`).style.display = 'none';
+        document.getElementById(`conectores-${id}`).style.display = 'none';
+        
+        document.getElementById(`input-nombre-${id}`).style.display = 'inline-block';
+        document.getElementById(`input-descripcion-${id}`).style.display = 'inline-block';
+        document.getElementById(`input-tipo-${id}`).style.display = 'inline-block';
+        document.getElementById(`input-potencia-${id}`).style.display = 'inline-block';
+        document.getElementById(`input-estado-${id}`).style.display = 'inline-block';
+        document.getElementById(`input-conectores-${id}`).style.display = 'block';
+        
+        document.getElementById(`btn-editar-${id}`).style.display = 'none';
+        document.getElementById(`btn-eliminar-${id}`).style.display = 'none';
+        document.getElementById(`btn-guardar-${id}`).style.display = 'inline-block';
+        document.getElementById(`btn-cancelar-${id}`).style.display = 'inline-block';
+    }
+
+    // Función para cancelar edición de cargador
+    window.cancelarEditarCargador = function(id) {
+        fetch('../api/cargadores.php')
+            .then(res => res.json())
+            .then(cargadores => {
+                mostrarListaCargadores(cargadores);
+            });
+    }
+
+    // Función para guardar cargador editado
+    window.guardarCargador = function(id) {
+        const nombre = document.getElementById(`input-nombre-${id}`).value;
+        const descripcion = document.getElementById(`input-descripcion-${id}`).value;
+        const tipo = document.getElementById(`input-tipo-${id}`).value;
+        const potencia = document.getElementById(`input-potencia-${id}`).value;
+        const estado = document.getElementById(`input-estado-${id}`).value;
+        
+        // Obtener conectores seleccionados
+        const checkboxes = document.querySelectorAll(`#input-conectores-${id} input[type="checkbox"]:checked`);
+        const conectores = Array.from(checkboxes).map(cb => cb.value).join(', ');
+        
+        if (!nombre) {
+            mostrarMensaje('El nombre es requerido', 'error');
+            return;
+        }
+        
+        fetch('../api/admin.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `modificar_cargador=1&id=${encodeURIComponent(id)}&nombre=${encodeURIComponent(nombre)}&descripcion=${encodeURIComponent(descripcion)}&tipo=${encodeURIComponent(tipo)}&potencia_kw=${encodeURIComponent(potencia)}&estado=${encodeURIComponent(estado)}&conectores=${encodeURIComponent(conectores)}`
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.exito) {
+                mostrarMensaje('Cargador actualizado correctamente', 'exito');
+                // Recargar lista
+                fetch('../api/cargadores.php')
+                    .then(res => res.json())
+                    .then(cargadores => {
+                        mostrarListaCargadores(cargadores);
+                        // Actualizar marcadores
+                        Object.values(marcadores).forEach(m => m.setMap(null));
+                        marcadores = {};
+                        cargadores.forEach(cargador => {
+                            agregarCargador(cargador.id, cargador.nombre, {lat: parseFloat(cargador.latitud), lng: parseFloat(cargador.longitud)});
+                        });
+                    });
+            } else {
+                mostrarMensaje(res.mensaje || 'Error al actualizar', 'error');
+            }
+        })
+        .catch(() => mostrarMensaje('Error de conexión', 'error'));
     }
 
     // Listar usuarios al cargar la página

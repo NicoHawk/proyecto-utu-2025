@@ -6,7 +6,39 @@ require_once __DIR__ . '/../modelo/Cargador.php';
 
 function listarCargadores() {
     $cargadorModel = new Cargador();
-    return $cargadorModel->listar();
+    // Liberar cargadores cuyas reservas ya finalizaron antes de listar
+    try {
+        $cargadorModel->liberarCargadoresVencidos();
+    } catch (Exception $e) {
+        // Si falla la liberación, continuamos con el listado
+        error_log("Error al liberar cargadores vencidos: " . $e->getMessage());
+    }
+
+    // Listado base
+    $lista = $cargadorModel->listar();
+
+    // Calcular estado en tiempo real: si tiene reserva ACTIVA ahora => "ocupado"
+    $ahora = date('Y-m-d H:i:s');
+    foreach ($lista as &$c) {
+        // Respetar estados manuales
+        $estado = isset($c['estado']) ? strtolower($c['estado']) : 'disponible';
+        if (in_array($estado, ['mantenimiento', 'fuera de servicio'])) {
+            continue;
+        }
+        // Si hay una reserva activa ahora, marcar ocupado en la respuesta
+        if ($cargadorModel->tieneReservaActiva($c['id'])) {
+            $c['estado'] = 'ocupado';
+        } else {
+            // Si no hay reserva activa y estaba "ocupado", mostrar "disponible" en respuesta
+            // (la liberación en BD puede depender del cron/listado previo)
+            if ($estado === 'ocupado') {
+                $c['estado'] = 'disponible';
+            }
+        }
+    }
+    unset($c);
+
+    return $lista;
 }
 
 function agregarCargador($nombre, $latitud, $longitud, $descripcion = '', $tipo = '', $estado = 'disponible', $potencia_kw = 0, $conectores = '') {
