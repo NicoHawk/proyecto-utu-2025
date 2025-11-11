@@ -1,0 +1,185 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Montserrat', Arial, sans-serif;
+}
+/* Barra superior fija y visible siempre */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 16px 0 rgba(0,0,0,0.10);
+    padding: 0 40px;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+.logo {
+    height: 80px;
+    width: auto;
+    margin-right: 32px;
+    display: block;
+    flex-shrink: 0;
+}
+.top-right {
+    margin-left: auto;
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+.top-right a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 1.08em;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+    padding: 2px 8px;
+    white-space: nowrap;
+}
+.top-right a:hover {
+    color: #1976d2;
+}
+.seccion {
+    min-height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+}
+/* Dejar espacio superior para la barra fija en la primera sección */
+.seccion:first-of-type {
+    padding-top: 100px;
+}
+.seccion-1 {
+    background: url('https://static.ecestaticos.com/file/f7a/a3c/757/f7aa3c75768c428f6c03244b09ffce5d.gif') no-repeat center center fixed;
+    background-size: cover;
+}
+.seccion-2 {
+    background: url('https://s3.amazonaws.com/arc-wordpress-client-uploads/infobae-wp/wp-content/uploads/2016/10/19155252/iStock_100664975_MEDIUM-1.jpg') no-repeat center center fixed;
+    background-size: cover;
+}
+.titulo {
+    color: #fff;
+    font-size: 3em;
+    font-weight: 700;
+    text-shadow: 2px 2px 16px #1976d2, 0 0 8px #90caf9;
+    margin-bottom: 18px;
+    text-align: center;
+}
+.subtitulo {
+    color: #e3f2fd;
+    font-size: 1.5em;
+    font-weight: 400;
+    text-shadow: 1px 1px 8px #1976d2;
+    margin-bottom: 40px;
+    text-align: center;
+}
+.info-map-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    background: rgba(255,255,255,0.92);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.13);
+    padding: 36px 28px;
+    max-width: 1100px;
+    margin: 0 auto;
+    margin-top: 60px;
+}
+.info {
+    max-width: 500px;
+    text-align: center;
+}
+.info h2 {
+    color: #1976d2;
+    margin-bottom: 18px;
+    font-size: 2em;
+    font-weight: 700;
+}
+.info p {
+    color: #0d47a1;
+    font-size: 1.15em;
+    margin-bottom: 0;
+}
+.map-title {
+    color: #1976d2;
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-align: center;
+}
+#map {
+    width: 350px;
+    height: 250px;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.13);
+    margin: 0 auto;
+}
+.seccion-1, .seccion-2 {
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: cover;
+    image-rendering: auto;
+}
+@media (max-width: 1100px) {
+    .info-map-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        padding: 24px 8vw;
+    }
+    #map { width: 95vw; }
+}
+@media (max-width: 768px) {
+    .top-bar {
+        padding: 0 20px;
+    }
+    .logo {
+        height: 88px;
+        margin-right: 16px;
+    }
+    .top-right {
+        gap: 16px;
+    }
+    .top-right a {
+        font-size: 0.95em;
+        padding: 2px 4px;
+    }
+    .titulo { font-size: 2.2em; }
+    .subtitulo { font-size: 1.2em; }
+}
+@media (max-width: 600px) {
+    .titulo { font-size: 1.8em; }
+    .subtitulo { font-size: 1em; }
+    .top-bar {
+        padding: 0 12px;
+    }
+    .logo {
+        height: 76px;
+        margin-right: 8px;
+    }
+    .top-right {
+        gap: 12px;
+    }
+    .top-right a {
+        font-size: 0.85em;
+        padding: 2px 3px;
+    }
+    .info { padding: 0; }
+    #map { width: 95vw; height: 180px; }
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Registro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/index.css">
+</head>
+
+<body>
+    <div class="top-bar">
+        <img src="../img/logo.png" alt="Logo de la empresa" class="logo">
+        <div class="top-right">
+            <a href="principal.html">Inicio</a>
+            <a href="registro.html">Registrarse</a>
+            <a href="#">Contacto</a>
+        </div>
+    </div>
+    <div class="container">
+        <h1>Registro</h1>
+        <form id="registroForm">
+            <input type="text" id="usuario" name="usuario" placeholder="Nombre de usuario" required>
+            <input type="email" id="correo" name="correo" placeholder="Correo electrónico" required>
+            <input type="password" id="password" name="password" placeholder="Contraseña" required>
+            <button type="submit">Registrarse</button>
+        </form>
+        <button class="register-btn" onclick="window.location.href='index.php'">Ir a Login</button>
+        <div id="mensaje" class="mensaje"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const registroForm = document.getElementById('registroForm');
+            const mensajeDiv = document.getElementById('mensaje');
+            mensajeDiv.style.display = 'none';
+
+            registroForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const usuario = document.getElementById('usuario').value;
+                const correo = document.getElementById('correo').value;
+                const password = document.getElementById('password').value;
+
+                const formData = new FormData();
+                formData.append('accion', 'registro');
+                formData.append('username', usuario);
+                formData.append('correo', correo);
+                formData.append('password', password);
+
+                fetch('../api/registro.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    mensajeDiv.style.display = 'block';
+                    if (data.success) {
+                        mensajeDiv.textContent = 'Registro exitoso. Redirigiendo...';
+                        mensajeDiv.className = 'mensaje success';
+                        setTimeout(() => {
+                            window.location.href = 'index.php';
+                        }, 900);
+                    } else {
+                        mensajeDiv.textContent = data.mensaje;
+                        mensajeDiv.className = 'mensaje error';
+                    }
+                })
+                .catch(error => {
+                    mensajeDiv.style.display = 'block';
+                    mensajeDiv.textContent = 'Error al conectar con el servidor.';
+                    mensajeDiv.className = 'mensaje error';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

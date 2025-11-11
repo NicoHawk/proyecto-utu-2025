@@ -1,0 +1,288 @@
+    body {
+    font-family: 'Montserrat', Arial, sans-serif;
+    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255,255,255,0.97);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    padding: 44px 32px 32px 32px;
+    position: relative;
+    animation: fadeIn 1s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(40px);}
+    to { opacity: 1; transform: translateY(0);}
+}
+
+h1 {
+    color: #00796b;
+    margin-bottom: 32px;
+    text-shadow: 2px 2px 8px #b2dfdb;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-size: 2.2em;
+    text-align: center;
+}
+
+form {
+    background: #e0f2f1;
+    padding: 22px 18px 16px 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: stretch;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+input[type="text"], input[type="password"], input[type="email"] {
+    padding: 12px 14px;
+    border: 1.5px solid #00796b;
+    border-radius: 7px;
+    background-color: #ffffff;
+    color: #004d40;
+    font-size: 1.08em;
+    transition: border 0.2s;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
+    border: 2px solid #0288d1;
+    outline: none;
+}
+
+button, .register-btn {
+    padding: 12px 0;
+    background: linear-gradient(90deg, #00796b 60%, #26c6da 100%);
+    color: white;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.08em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: background 0.3s, transform 0.1s;
+    width: 100%;
+}
+
+button:hover, .register-btn:hover {
+    background: linear-gradient(90deg, #004d40 60%, #0288d1 100%);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.register-btn {
+    margin-top: 10px;
+    background: linear-gradient(90deg, #0288d1 60%, #26c6da 100%);
+    color: #fff;
+    font-weight: 700;
+}
+
+.mensaje {
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 7px;
+    display: none;
+    width: 100%;
+    text-align: center;
+    font-size: 1em;
+}
+
+.mensaje.error {
+    background-color: #ffccbc;
+    color: #e65100;
+    border: 1.5px solid #e65100;
+}
+
+.mensaje.success {
+    background-color: #c8e6c9;
+    color: #2e7d32;
+    border: 1.5px solid #2e7d32;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    background: #b2dfdb;
+}
+::-webkit-scrollbar-thumb {
+    background: #26c6da;
+    border-radius: 4px;
+}
+
+.menu-lateral {
+    position: fixed;
+    top: 0;
+    right: -260px;
+    left: auto;
+    width: 240px;
+    height: 100vh;
+    background: rgba(30, 30, 30, 0.97);
+    box-shadow: -2px 0 16px rgba(0,0,0,0.18);
+    transition: right 0.4s cubic-bezier(.77,0,.18,1);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 18px 18px 18px;
+}
+.menu-lateral.abierto {
+    right: 0;
+    left: auto;
+}
+.menu-lateral .cerrar-menu {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2em;
+    cursor: pointer;
+    margin-bottom: 24px;
+}
+.menu-lateral a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.15em;
+    margin: 12px 0;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+.menu-lateral a:hover {
+    color: #26c6da;
+}
+.menu-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.25);
+    z-index: 1999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.menu-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+/* Botón menú a la derecha */
+
+/* Botón menú a la derecha */
+.menu-btn {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    left: auto;
+    z-index: 2100;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 46px;
+    height: 46px;
+    font-size: 2em;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.menu-btn:hover {
+    background: #26c6da;
+}
+
+.login-btn {
+    margin-top: 10px;
+    font-weight: 700;
+}
+
+/* Botón azul personalizado */
+.login-btn.azul {
+    background: linear-gradient(90deg, #1976d2 60%, #26c6da 100%);
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: background 0.3s, transform 0.1s;
+}
+.login-btn.azul:hover {
+    background: linear-gradient(90deg, #0d47a1 60%, #0288d1 100%);
+    transform: translateY(-2px) scale(1.04);
+}
+
+
+/* Responsive igual que index.html */
+@media (max-width: 600px) {
+    .container {
+        max-width: 98vw;
+        padding: 18px 4vw 18px 4vw;
+    }
+    form {
+        gap: 12px;
+    }
+    input[type="text"], input[type="password"] {
+        width: 100%;
+    }
+    .menu-lateral {
+        width: 90vw;
+        min-width: 0;
+        padding: 24px 10vw 18px 6vw;
+        right: -90vw;
+        left: auto;
+    }
+    .menu-lateral.abierto {
+        right: 0;
+        left: auto;
+    }
+    .menu-btn {
+        top: 10px;
+        right: 10px;
+        left: auto;
+        width: 40px;
+        height: 40px;
+        font-size: 1.5em;
+    }
+}
+@media (max-width: 600px) {
+    .container {
+        max-width: 98vw;
+        padding: 18px 4vw 18px 4vw;
+    }
+    form {
+        gap: 12px;
+    }
+    input[type="text"], input[type="password"] {
+        width: 100%;
+    }
+    .menu-lateral {
+        width: 90vw;
+        min-width: 0;
+        padding: 24px 10vw 18px 6vw;
+        right: -90vw;
+        left: auto;
+    }
+    .menu-lateral.abierto {
+        right: 0;
+        left: auto;
+    }
+    .menu-btn {
+        top: 10px;
+        right: 10px;
+        left: auto;
+        width: 40px;
+        height: 40px;
+        font-size: 1.5em;
+    }
+}

@@ -1,0 +1,149 @@
+/* ===== Admin minimalista (estilo similar al cliente pero claro) ===== */
+html, body { height: 100%; margin: 0; padding: 0; }
+body {
+    font-family: 'Montserrat', Arial, sans-serif;
+    background: linear-gradient(180deg, #f7f9fc 0%, #ffffff 100%);
+    min-height: 100vh;
+}
+
+/* Menú usuario (arriba a la derecha) */
+.usuario-menu { position: fixed; top: 18px; right: 24px; z-index: 200; }
+.usuario-trigger {
+    display: flex; align-items: center; gap: 6px;
+    background: #fff; border-radius: 24px; padding: 4px 12px 4px 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); cursor: pointer;
+}
+.usuario-trigger:hover { background: #f1f5ff; }
+.icono-usuario { width: 28px; height: 28px; border-radius: 50%; background: #eef4ff; }
+.saludo, .flecha { color: #1f4ccd; font-weight: 600; }
+.usuario-dropdown {
+    display: none; position: absolute; right: 0; top: 110%; background: #fff;
+    border: 1px solid #e6eef5; border-radius: 10px; min-width: 140px; padding: 6px 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+.usuario-dropdown a { display: block; padding: 8px 14px; color: #1f4ccd; text-decoration: none; font-weight: 500; }
+.usuario-dropdown a:hover { background: #f1f5ff; }
+.usuario-menu.activo .usuario-dropdown { display: block; }
+
+/* Sidebar clara */
+.sidebar {
+    width: 200px; height: 100vh; position: fixed; left: 0; top: 0;
+    background: #ffffff; border-right: 1px solid #e6eef5;
+    display: flex; flex-direction: column; padding: 20px 0; z-index: 100;
+}
+.sidebar-logo { text-align: center; margin-bottom: 28px; }
+.sidebar-logo img { width: 52px; height: 52px; border-radius: 50%; border: 2px solid #e6eef5; }
+.sidebar-menu { list-style: none; margin: 0; padding: 0; }
+.sidebar-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 18px; cursor: pointer;
+    color: #334155; transition: background 0.2s, color 0.2s; border-left: 3px solid transparent;
+}
+.sidebar-item:hover { background: #f6f9ff; }
+.sidebar-item.active { background: #eef4ff; border-left-color: #1f4ccd; color: #1f4ccd; }
+.sidebar-icon { font-size: 20px; }
+.sidebar-text { font-weight: 600; font-size: 0.98em; }
+
+/* Panel principal */
+.main-panel { margin-left: 200px; padding: 28px; max-height: 100vh; overflow-y: auto; }
+
+/* Contenedores (pestañas) */
+.tab-content {
+    background: #ffffff; border: 1px solid #e6eef5; border-radius: 16px; padding: 28px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06); animation: fadeIn 0.5s ease-in;
+    max-width: 1100px; margin: 0 auto 28px auto;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px);} to { opacity: 1; transform: translateY(0); } }
+
+h1 { color: #0f172a; margin: 0 0 12px 0; }
+h2 { color: #1f2937; }
+p, label, th, td { color: #374151; }
+
+/* Formularios y tablas */
+input[type="text"], input[type="password"], input[type="email"], input[type="number"], select {
+    padding: 10px 12px; border: 1px solid #dbe5f0; border-radius: 8px; background: #fff; color: #111827;
+}
+input:focus, select:focus { outline: none; border-color: #1f4ccd; box-shadow: 0 0 0 3px rgba(31,76,205,0.12); }
+
+/* Checkboxes personalizados */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #1f4ccd;
+}
+
+button {
+    padding: 10px 16px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 600; color: #fff;
+    background: linear-gradient(90deg, #1f4ccd 60%, #3ba8ff 100%);
+}
+button:hover { filter: brightness(0.98); transform: translateY(-1px); }
+
+#btn-listar { width: 100%; margin-top: 10px; }
+
+ul { list-style: none; padding: 0; margin: 10px 0 0 0; }
+li { background: #fff; border: 1px solid #e6eef5; border-radius: 10px; padding: 10px; display: flex; align-items:center; gap: 8px; margin-bottom: 8px; }
+.usuario-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.btn-editar { background: #ffb300; color: #fff; }
+.btn-guardar { background: #43a047; color: #fff; }
+.btn-cancelar { background: #757575; color: #fff; }
+.btn-eliminar { background: #e53935; color: #fff; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #e6eef5; padding: 10px; text-align: left; }
+th { background: #eef4ff; color: #1f4ccd; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .sidebar { width: 72px; }
+    .sidebar-text { display: none; }
+    .main-panel { margin-left: 72px; padding: 16px; }
+    .tab-content { padding: 18px; }
+}
+@media (max-width: 600px) {
+    h1 { font-size: 1.5em; }
+    h2 { font-size: 1.2em; }
+}
+
+/* Mensajes Toast */
+.mensaje-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95em;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+    transition: opacity 0.3s;
+}
+.mensaje-toast.exito {
+    background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+}
+.mensaje-toast.error {
+    background: linear-gradient(135deg, #e53935 0%, #ef5350 100%);
+}
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Resaltado temporal del mapa al hacer scroll con "Ver" */
+#map.map-highlight {
+    box-shadow: 0 0 0 3px rgba(31, 76, 205, 0.35), 0 0 24px rgba(31, 76, 205, 0.25);
+    border-radius: 12px;
+    animation: mapPulse 1.2s ease-out 1;
+}
+@keyframes mapPulse {
+    0% { box-shadow: 0 0 0 0 rgba(31, 76, 205, 0.45), 0 0 0 rgba(31, 76, 205, 0.0); }
+    70% { box-shadow: 0 0 0 8px rgba(31, 76, 205, 0.18), 0 0 36px rgba(31, 76, 205, 0.25); }
+    100% { box-shadow: 0 0 0 0 rgba(31, 76, 205, 0.0), 0 0 0 rgba(31, 76, 205, 0.0); }
+}
