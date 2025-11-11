@@ -26,17 +26,17 @@ function responder($data, $codigo = 200) {
 if (!isset($_SESSION['usuario'])) {
     responder(['exito' => false, 'mensaje' => 'No autenticado'], 401);
 }
+
+// Usar directamente el nombre de usuario de la sesión (tu tabla usa VARCHAR, no INT)
 $usuario = $_SESSION['usuario'];
 
 try {
     if ($metodo === 'GET') {
         if ($accion === 'listar_usuario') {
-            // Marcar reservas completadas antes de listar
             ReservaControlador::marcarReservasCompletadas();
-            $resp = ReservaControlador::listarReservasUsuario($usuario);
-            responder($resp);
+            $reservas = ReservaControlador::listarReservasUsuario($usuario);
+            responder(['exito' => true, 'reservas' => $reservas]);
         } elseif ($accion === 'listar_cargador') {
-            // Marcar reservas completadas antes de listar
             ReservaControlador::marcarReservasCompletadas();
             $cargador_id = intval($_GET['cargador_id'] ?? 0);
             if ($cargador_id <= 0) responder(['exito' => false, 'mensaje' => 'cargador_id requerido'], 400);
@@ -47,16 +47,16 @@ try {
         }
     } elseif ($metodo === 'POST') {
         if ($accion === 'crear') {
-            $input = is_array($jsonBody) ? $jsonBody : json_decode($rawBody, true);
-            $cargador_id = intval($input['cargador_id'] ?? $_POST['cargador_id'] ?? 0);
-            $inicio = $input['inicio'] ?? $_POST['inicio'] ?? null;
-            $fin = $input['fin'] ?? $_POST['fin'] ?? null;
+            $input = is_array($jsonBody) ? $jsonBody : ($_POST ?: []);
+            $cargador_id = intval($input['cargador_id'] ?? 0);
+            $inicio = $input['inicio'] ?? null;
+            $fin = $input['fin'] ?? null;
             if ($cargador_id <= 0 || !$inicio || !$fin) responder(['exito' => false, 'mensaje' => 'Datos incompletos'], 400);
             $resp = ReservaControlador::crearReserva($usuario, $cargador_id, $inicio, $fin);
             responder($resp, $resp['exito'] ? 200 : 409);
         } elseif ($accion === 'cancelar') {
-            $input = is_array($jsonBody) ? $jsonBody : json_decode($rawBody, true);
-            $reserva_id = intval($input['reserva_id'] ?? $_POST['reserva_id'] ?? 0);
+            $input = is_array($jsonBody) ? $jsonBody : ($_POST ?: []);
+            $reserva_id = intval($input['reserva_id'] ?? 0);
             if ($reserva_id <= 0) responder(['exito' => false, 'mensaje' => 'reserva_id requerido'], 400);
             $resp = ReservaControlador::cancelarReserva($usuario, $reserva_id);
             responder($resp);

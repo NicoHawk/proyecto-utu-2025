@@ -269,6 +269,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
 
                 <button type="submit" style="margin-top: 20px;">Confirmar reserva</button>
             </form>
+            <div id="mensajeReserva" style="margin-top:15px;"></div>
         </div>
     </div>
 
@@ -668,10 +669,9 @@ document.querySelector('[data-tab="viajes"]').addEventListener('click', () => {
 // Cargar historial cuando se abre la pestaña Historial
 let historialCargado = false;
 document.querySelector('[data-tab="historial"]')?.addEventListener('click', () => {
-    if (!historialCargado) {
-        cargarHistorialReservas();
-        historialCargado = true;
-    }
+    console.log('🔍 Pestaña Historial clickeada');
+    cargarHistorialReservas(); // Cargar siempre para tener datos actualizados
+    historialCargado = true;
 });
 
 function initMapa() {
@@ -886,21 +886,40 @@ function cargarAutosSelector() {
 
 // Abrir modal de reserva con calendario/hora
 function abrirReserva(id) {
-    document.getElementById('reservaCargadorId').value = id;
+    console.log('🔓 Abriendo modal de reserva para estación:', id);
+    
+    // Validar que el ID sea válido
+    if (!id || isNaN(id) || parseInt(id) <= 0) {
+        console.error('❌ ID inválido recibido:', id);
+        alert('Error: ID de estación inválido');
+        return;
+    }
+    
+    document.getElementById('reservaCargadorId').value = parseInt(id);
+    console.log('✅ Campo reservaCargadorId seteado a:', document.getElementById('reservaCargadorId').value);
+    
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const d = String(now.getDate()).padStart(2, '0');
-    const h = String(now.getHours()).padStart(2, '0');
+    
     // Redondear a múltiplos de 15
     const mins = now.getMinutes();
     const rounded = Math.ceil(mins / 15) * 15;
     const minStr = String(rounded === 60 ? 0 : rounded).padStart(2, '0');
     const hourStr = String(rounded === 60 ? (now.getHours() + 1) % 24 : now.getHours()).padStart(2, '0');
+    
     document.getElementById('reservaFecha').value = `${y}-${m}-${d}`;
     document.getElementById('reservaHoraInicio').value = `${hourStr}:${minStr}`;
     document.getElementById('reservaDuracion').value = 60;
+    
+    // Limpiar cualquier mensaje previo
+    const msg = document.getElementById('mensajeReserva');
+    msg.innerHTML = '';
+    msg.className = '';
+    
     document.getElementById('modalReserva').style.display = 'block';
+    console.log('✅ Modal abierto');
 }
 
 // Geocodificar con Nominatim a través de nuestro proxy PHP
@@ -1258,9 +1277,15 @@ document.addEventListener('click', e => {
 });
 
 function abrirDetalleEstacion(id) {
+    console.log('👁️ Abriendo detalle de estación:', id);
     const est = (estaciones||[]).find(e => Number(e.id) === Number(id));
-    if (!est) return;
-    estacionSeleccionadaParaReserva = id;
+    if (!est) {
+        console.error('❌ Estación no encontrada:', id);
+        return;
+    }
+    estacionSeleccionadaParaReserva = parseInt(id);
+    console.log('✅ estacionSeleccionadaParaReserva =', estacionSeleccionadaParaReserva);
+    
     document.getElementById('detNombre').textContent = est.nombre || 'Estación';
     document.getElementById('detLat').textContent = est.latitud ?? '-';
     document.getElementById('detLon').textContent = est.longitud ?? '-';
@@ -1270,115 +1295,95 @@ function abrirDetalleEstacion(id) {
     document.getElementById('modalEstacion').style.display = 'block';
 }
 
-function planificarParaEstacion(id) { abrirReserva(id); }
+function planificarParaEstacion(id) { 
+    console.log('📍 planificarParaEstacion llamado con ID:', id);
+    abrirReserva(id); 
+}
 
 function listarReservas() {
-    fetch('../api/reservas.php?accion=listar_usuario')
+    fetch('../api/reservas.php?accion=listar_usuario', { cache: 'no-store' })
       .then(r=>r.json())
       .then(resp => {
+          console.log('📡 listar_usuario:', resp);
           const tbody = document.querySelector('#tablaReservas tbody');
           tbody.innerHTML = '';
-          if (!resp?.exito || !Array.isArray(resp.reservas)) {
-              tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Sin datos</td></tr>';
-              return;
-          }
+
+          const reservas = Array.isArray(resp?.reservas) ? resp.reservas : [];
           const ahora = new Date();
-          const activas = resp.reservas.filter(r => r.estado === 'confirmada' && new Date((r.fin||'').replace(' ','T')) > ahora);
+
+          const activas = reservas.filter(r => {
+              const finStr = r.fin || '';
+              const finDate = finStr ? new Date(finStr.replace(' ', 'T')) : null;
+              const estado = String(r.estado || '').toLowerCase();
+              // Activas = confirmadas Y futuras
+              return estado === 'confirmada' && finDate && finDate > ahora;
+          });
+
           if (!activas.length) {
               tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No tenés reservas activas</td></tr>';
               return;
           }
+
           activas.forEach(r => {
+              const estacion = r.estacion || (r.cargador_id ? `Estación #${r.cargador_id}` : '-');
               const tr = document.createElement('tr');
-              tr.innerHTML = `<td>${r.estacion || r.cargador_id}</td>
-                              <td>${r.inicio}</td>
-                              <td>${r.fin}</td>
-                              <td>${r.estado}</td>
+              tr.innerHTML = `<td>${estacion}</td>
+                              <td>${r.inicio || '-'}</td>
+                              <td>${r.fin || '-'}</td>
+                              <td>${r.estado || '-'}</td>
                               <td><button class="btn-cancelar-reserva" data-id="${r.id}">Cancelar</button></td>`;
               tbody.appendChild(tr);
+              tr.querySelector('.btn-cancelar-reserva').addEventListener('click', () => cancelarReserva(r.id));
           });
       })
-      .catch(() => {
+      .catch(err => {
+          console.error(err);
           document.querySelector('#tablaReservas tbody').innerHTML =
             '<tr><td colspan="5" style="text-align:center;">Error al cargar</td></tr>';
       });
 }
 
-function cargarHistorialReservas() {
-    fetch('../api/reservas.php?accion=listar_usuario')
-      .then(r=>r.json())
-      .then(resp => {
-          const tbody = document.querySelector('#tablaHistorialReservas tbody');
-          tbody.innerHTML = '';
-          if (!resp?.exito || !Array.isArray(resp.reservas)) {
-              tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Sin datos</td></tr>';
-              return;
-          }
-          const ahora = new Date();
-          const hist = resp.reservas.filter(r =>
-              r.estado === 'cancelada' || r.estado === 'completada' ||
-              new Date((r.fin||'').replace(' ','T')) < ahora
-          );
-          if (!hist.length) {
-              tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Sin historial</td></tr>';
-              return;
-          }
-          hist.forEach(r => {
-              const tr = document.createElement('tr');
-              tr.innerHTML = `<td>${r.estacion || r.cargador_id}</td><td>${r.inicio}</td><td>${r.fin}</td><td>${r.estado}</td>`;
-              tbody.appendChild(tr);
-          });
-      })
-      .catch(() => {
-          document.querySelector('#tablaHistorialReservas tbody').innerHTML =
-            '<tr><td colspan="4" style="text-align:center;">Error al cargar</td></tr>';
-      });
-}
-
-function mostrarResumenRuta(totalKm, autonomia, bateriaPct, paradas) {
-    let div = document.getElementById('resumenRuta');
-    if (!div) {
-        div = document.createElement('div');
-        div.id = 'resumenRuta';
-        div.style.margin = '12px 0 20px 0';
-        div.style.fontSize = '0.9em';
-        const mapaEl = document.getElementById('mapaRuta');
-        mapaEl.parentNode.insertBefore(div, mapaEl.nextSibling);
+// Función separada para cancelar
+function cancelarReserva(id) {
+    console.log('🗑️ Cancelando reserva ID:', id);
+    
+    if (!id) {
+        alert('Error: ID de reserva no válido');
+        return;
     }
-    const alcanceKm = autonomia * (bateriaPct/100);
-    const esenciales = paradas.filter(p=>p.tipo==='esencial').length;
-    const opcionales = paradas.filter(p=>p.tipo==='opcional').length;
-    div.innerHTML = `
-    <div class="fila"><span class="icono">📏</span><span>Distancia ruta: <strong>${totalKm.toFixed(1)} km</strong></span></div>
-    <div class="fila"><span class="icono">⚡</span><span>Autonomía base: <strong>${autonomia} km</strong> (<em>${bateriaPct}% = ${alcanceKm.toFixed(1)} km</em>)</span></div>
-    <div class="fila"><span class="icono">🔋</span><span>Paradas esenciales: <strong>${esenciales}</strong> | Paradas opcionales: <strong>${opcionales}</strong></span></div>
-    ${esenciales===0 ? '<div style="margin-top:6px;font-size:0.85em;">🟢 Tu autonomía cubre el viaje. Mostramos paradas opcionales por conveniencia.</div>' : ''}
-    `;
-}
-
-// Evento para cancelar reservas
-document.addEventListener('click', e => {
-    if (e.target.classList.contains('btn-cancelar-reserva')) {
-        const id = e.target.dataset.id;
-        if (!confirm('¿Cancelar esta reserva?')) return;
-        fetch('../api/reservas.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({accion: 'cancelar', id})
+    
+    if (!confirm('¿Cancelar esta reserva?')) return;
+    
+    fetch('../api/reservas.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            accion: 'cancelar', 
+            reserva_id: parseInt(id)
         })
-        .then(r => r.json())
-        .then(resp => {
-            if (resp.exito) {
+    })
+    .then(r => r.json())
+    .then(resp => {
+        console.log('📡 Respuesta cancelar:', resp);
+        if (resp.exito) {
+            // 🔥 REFRESCAR INMEDIATAMENTE DESPUÉS DE CANCELAR
+            console.log('🔄 Refrescando estados inmediatamente después de cancelar...');
+            listarReservas();
+            refrescarEstados();
+            
+            // Mostrar mensaje después del refresh
+            setTimeout(() => {
                 alert('Reserva cancelada');
-                listarReservas();
-                refrescarEstados();
-            } else {
-                alert('Error al cancelar: ' + (resp.mensaje || ''));
-            }
-        })
-        .catch(() => alert('Error de conexión'));
-    }
-});
+            }, 500);
+        } else {
+            alert('Error al cancelar: ' + (resp.mensaje || 'Error desconocido'));
+        }
+    })
+    .catch(err => {
+        console.error('❌ Error al cancelar:', err);
+        alert('Error de conexión: ' + err.message);
+    });
+}
 
 // Modal reserva submit
 document.getElementById('formReserva').addEventListener('submit', function(e) {
@@ -1387,30 +1392,107 @@ document.getElementById('formReserva').addEventListener('submit', function(e) {
     const fecha = document.getElementById('reservaFecha').value;
     const hora = document.getElementById('reservaHoraInicio').value;
     const duracion = document.getElementById('reservaDuracion').value;
-    if (!cargadorId || !fecha || !hora || !duracion) {
-        alert('Completá todos los campos'); return;
+    
+    console.log('📋 Datos del formulario:', {cargadorId, fecha, hora, duracion});
+    
+    const idNumerico = parseInt(cargadorId);
+    if (!cargadorId || isNaN(idNumerico) || idNumerico <= 0) {
+        const msg = document.getElementById('mensajeReserva');
+        msg.innerHTML = `⚠️ Error: ID de estación inválido (${cargadorId})`;
+        msg.className = 'mensaje error';
+        setTimeout(() => { msg.innerHTML = ''; msg.className = ''; }, 4000);
+        return;
     }
+    
+    if (!fecha || !hora || !duracion) {
+        const msg = document.getElementById('mensajeReserva');
+        msg.innerHTML = '⚠️ Por favor completá todos los campos';
+        msg.className = 'mensaje error';
+        setTimeout(() => { msg.innerHTML = ''; msg.className = ''; }, 3000);
+                             return;
+    }
+    
+    const inicio = `${fecha} ${hora}:00`;
+    const duracionMin = parseInt(duracion);
+    const fechaInicio = new Date(`${fecha}T${hora}:00`);
+    const fechaFin = new Date(fechaInicio.getTime() + duracionMin * 60000);
+    
+    const year = fechaFin.getFullYear();
+    const month = String(fechaFin.getMonth() + 1).padStart(2, '0');
+    const day = String(fechaFin.getDate()).padStart(2, '0');
+    const hours = String(fechaFin.getHours()).padStart(2, '0');
+    const minutes = String(fechaFin.getMinutes()).padStart(2, '0');
+    
+    const fin = `${year}-${month}-${day} ${hours}:${minutes}:00`;
+    
+    console.log('⏰ Fechas calculadas:', {inicio, fin});
+    
+    const btnSubmit = this.querySelector('button[type="submit"]');
+    const textoOriginal = btnSubmit.textContent;
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Procesando...';
+    
+    const payload = {
+        accion: 'crear',
+        cargador_id: idNumerico,
+        inicio: inicio,
+        fin: fin
+    };
+    
+    console.log('📤 Enviando a la API:', payload);
+    
     fetch('../api/reservas.php', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-            accion: 'crear',
-            cargador_id: cargadorId,
-            fecha, hora_inicio: hora, duracion
-        })
+        body: JSON.stringify(payload)
     })
-    .then(r => r.json())
+    .then(r => {
+        console.log('📡 Respuesta status:', r.status);
+        return r.text().then(text => {
+            console.log('📡 Respuesta raw:', text);
+            try {
+                return JSON.parse(text);
+            } catch(e) {
+                console.error('❌ No es JSON válido:', text);
+                throw new Error('Respuesta no es JSON: ' + text.substring(0, 100));
+            }
+        });
+    })
     .then(resp => {
+        console.log('✅ Respuesta API parseada:', resp);
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = textoOriginal;
+        
+        const msg = document.getElementById('mensajeReserva');
         if (resp.exito) {
-            alert('Reserva confirmada');
-            document.getElementById('modalReserva').style.display = 'none';
+            msg.innerHTML = '✅ Reserva confirmada exitosamente';
+            msg.className = 'mensaje exito';
+            
+            // 🔥 REFRESCAR INMEDIATAMENTE (sin esperar 2 segundos)
+            console.log('🔄 Refrescando estados inmediatamente...');
             listarReservas();
             refrescarEstados();
+            
+            // Cerrar modal después de refrescar
+            setTimeout(() => {
+                document.getElementById('modalReserva').style.display = 'none';
+                msg.innerHTML = '';
+                msg.className = '';
+                this.reset();
+            }, 1500); // Reducido a 1.5 segundos
         } else {
-            alert('Error al reservar: ' + (resp.mensaje || ''));
+            msg.innerHTML = '❌ ' + (resp.mensaje || 'Error al crear la reserva');
+            msg.className = 'mensaje error';
         }
     })
-    .catch(() => alert('Error de conexión'));
+    .catch(err => {
+        console.error('❌ Error completo:', err);
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = textoOriginal;
+        const msg = document.getElementById('mensajeReserva');
+        msg.innerHTML = '❌ ' + err.message;
+        msg.className = 'mensaje error';
+    });
 });
 
 // Cerrar modales
@@ -1419,11 +1501,18 @@ document.querySelectorAll('.close, .close-reserva, .close-estacion').forEach(btn
         document.getElementById('modalReserva').style.display = 'none';
         document.getElementById('modalEstacion').style.display = 'none';
     });
+
 });
 
 document.getElementById('btnReservarDesdeDetalle')?.addEventListener('click', () => {
-    if (estacionSeleccionadaParaReserva) abrirReserva(estacionSeleccionadaParaReserva);
-    document.getElementById('modalEstacion').style.display = 'none';
+    console.log('🔘 Botón Reservar desde Detalle - ID:', estacionSeleccionadaParaReserva);
+    if (estacionSeleccionadaParaReserva) {
+        abrirReserva(estacionSeleccionadaParaReserva);
+        document.getElementById('modalEstacion').style.display = 'none';
+    } else {
+        console.error('❌ No hay estación seleccionada');
+        alert('Error: No se pudo identificar la estación');
+    }
 });
 
 // Aplicar filtros cuando cambian los selects
@@ -1448,6 +1537,160 @@ document.getElementById('btnReservarDesdeDetalle')?.addEventListener('click', ()
         }
     });
 });
+
+// Función para mostrar resumen de ruta (AGREGAR DESPUÉS DE trazarRutaYSugerir)
+function mostrarResumenRuta(totalKm, autoAutonomia, autoBateria, paradasRecomendadas) {
+    console.log('📊 Mostrando resumen de ruta:', {totalKm, autoAutonomia, autoBateria, paradasCount: paradasRecomendadas.length});
+    
+    // Crear o actualizar panel de resumen
+    let panel = document.getElementById('resumenRutaPanel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'resumenRutaPanel';
+        panel.style.cssText = `
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        `;
+        const mapaRuta = document.getElementById('mapaRuta');
+        mapaRuta.parentNode.insertBefore(panel, mapaRuta.nextSibling);
+    }
+    
+    const alcanceActual = (autoAutonomia * autoBateria / 100).toFixed(1);
+    const necesitaCarga = totalKm > alcanceActual;
+    const esenciales = paradasRecomendadas.filter(p => p.tipo === 'esencial');
+    const opcionales = paradasRecomendadas.filter(p => p.tipo === 'opcional');
+    
+    let html = `
+        <h3 style="margin:0 0 16px 0; color:#60a5fa; font-size:1.3em;">📊 Resumen de Ruta</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+            <div>
+                <div style="font-size:0.85em; color:#93c5fd; margin-bottom:4px;">Distancia Total</div>
+                <div style="font-size:1.5em; font-weight:bold;">${totalKm.toFixed(1)} km</div>
+            </div>
+            <div>
+                <div style="font-size:0.85em; color:#93c5fd; margin-bottom:4px;">Autonomía Actual</div>
+                <div style="font-size:1.5em; font-weight:bold;">${alcanceActual} km (${autoBateria}%)</div>
+            </div>
+            <div>
+                <div style="font-size:0.85em; color:#93c5fd; margin-bottom:4px;">Paradas Necesarias</div>
+                <div style="font-size:1.5em; font-weight:bold; color:${necesitaCarga ? '#fbbf24' : '#34d399'};">
+                    ${necesitaCarga ? esenciales.length : '0'}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (necesitaCarga && esenciales.length > 0) {
+        html += `
+            <div style="margin-top:20px; padding:16px; background:rgba(251,191,36,0.15); border-radius:8px; border-left:4px solid #fbbf24;">
+                <strong style="color:#fbbf24;">⚡ Paradas de Carga Esenciales:</strong>
+                <ul style="margin:8px 0 0 20px; padding:0;">
+        `;
+        esenciales.forEach(p => {
+            html += `
+                <li style="margin:6px 0;">
+                    <strong>${p.nombre}</strong> - 
+                    ${p.kmDesdeOrigen}km • 
+                    🔋 ${p.bateriaAlLlegar}% → ${p.bateriaDespues}%
+                    ${p.tiempoEstimadoMin ? ` • ⏱️ ${p.tiempoEstimadoMin} min` : ''}
+                </li>
+            `;
+        });
+        html += '</ul></div>';
+    }
+    
+    if (!necesitaCarga) {
+        html += `
+            <div style="margin-top:20px; padding:16px; background:rgba(52,211,153,0.15); border-radius:8px; border-left:4px solid #34d399;">
+                <strong style="color:#34d399;">✅ No necesitás cargar para llegar al destino</strong>
+                <p style="margin:8px 0 0 0; font-size:0.9em;">Tu batería actual (${autoBateria}%) es suficiente para recorrer ${totalKm.toFixed(1)} km.</p>
+            </div>
+        `;
+    }
+    
+    if (opcionales.length > 0) {
+        html += `
+            <div style="margin-top:16px; padding:12px; background:rgba(234,179,8,0.1); border-radius:8px;">
+                <strong style="color:#eab308;">💡 Sugerencias opcionales de carga:</strong>
+                <small style="display:block; margin-top:4px; color:#fef3c7;">
+                    ${opcionales.map(p => p.nombre).join(', ')}
+                </small>
+            </div>
+        `;
+    }
+    
+    panel.innerHTML = html;
+}
+
+// Función para cargar historial de reservas (completadas y canceladas)
+function cargarHistorialReservas() {
+    console.log('📊 Cargando historial de reservas...');
+    fetch('../api/reservas.php?accion=listar_usuario', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(resp => {
+          console.log('📡 Respuesta historial:', resp);
+          const tbody = document.querySelector('#tablaHistorialReservas tbody');
+          if (!tbody) return;
+          tbody.innerHTML = '';
+
+          const reservas = Array.isArray(resp?.reservas) ? resp.reservas : [];
+
+          if (!reservas.length) {
+              tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Sin datos</td></tr>';
+              return;
+          }
+
+          const ahora = new Date();
+          const pasadas = reservas.filter(r => {
+              const estado = String(r.estado || '').toLowerCase();
+              // Mostrar en historial: canceladas O completadas O pasadas
+              if (estado === 'cancelada' || estado === 'completada') return true;
+              const finStr = r.fin || '';
+              if (!finStr) return false;
+              const finDate = new Date(finStr.replace(' ', 'T'));
+              return finDate < ahora;
+          });
+
+          if (!pasadas.length) {
+              tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No tenés historial de cargas</td></tr>';
+              return;
+          }
+
+          pasadas.sort((a, b) => {
+              const aIni = new Date((a.inicio || '').replace(' ', 'T'));
+              const bIni = new Date((b.inicio || '').replace(' ', 'T'));
+              return bIni - aIni; // Más recientes primero
+          });
+
+          pasadas.forEach(r => {
+              const estacion = r.estacion || (r.cargador_id ? `Estación #${r.cargador_id}` : '-');
+              const inicio = r.inicio || '-';
+              const fin = r.fin || '-';
+              const estado = r.estado || '-';
+              const estadoClass = estado === 'completada' ? 'estado-completada'
+                                : estado === 'cancelada' ? 'estado-cancelada' : '';
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                  <td>${estacion}</td>
+                  <td>${inicio}</td>
+                  <td>${fin}</td>
+                  <td><span class="${estadoClass}">${estado}</span></td>
+              `;
+              tbody.appendChild(tr);
+          });
+      })
+      .catch(err => {
+          console.error('❌ Error al cargar historial:', err);
+          const tbody = document.querySelector('#tablaHistorialReservas tbody');
+          if (tbody) {
+              tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Error al cargar historial</td></tr>';
+          }
+      });
+}
     </script>
 
     <!-- Leaflet JS (sin clave) -->
