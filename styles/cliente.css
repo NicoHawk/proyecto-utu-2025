@@ -803,3 +803,50 @@ form#formViaje button {
 #panelEstaciones table td:nth-child(6) strong { display:inline-block; padding:4px 8px; border-radius:6px; }
 #panelEstaciones table td:nth-child(6) strong[style*="esencial"] { background:#ff5722; color:#fff; }
 #panelEstaciones table td:nth-child(6) strong[style*="opcional"] { background:#ffc400; color:#222; }
+
+/* Botones de factura */
+.btn-descargar-factura,
+.btn-generar-factura {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-descargar-factura {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-descargar-factura:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-generar-factura {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.btn-generar-factura:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-descargar-factura:disabled,
+.btn-generar-factura:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Estados de pago */
+.estado-completada {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+}

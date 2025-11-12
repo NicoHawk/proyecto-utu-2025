@@ -1,12 +1,14 @@
 <?php
-
 require_once __DIR__ . '/../modelo/Usuario.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$usuarioModel = new Usuario();
+// ✅ Crear la conexión y el modelo
+$db = conectar();
+$usuarioModel = new Usuario($db);
+$usuarioModel->setTabla('usuarios');
 
 function loginUsuario($correo, $password) {
     global $usuarioModel;
@@ -31,21 +33,14 @@ function loginUsuario($correo, $password) {
 
 function registrarUsuario($username, $password, $tipo_usuario, $correo = '') {
     global $usuarioModel;
-    // Si no se proporciona correo, generamos uno temporal
     if (empty($correo)) {
         $correo = $username . '@temp.com';
     }
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
     if ($usuarioModel->insertar($username, $correo, $passwordHash, $tipo_usuario)) {
-        return [
-            'success' => true,
-            'mensaje' => 'Usuario registrado con éxito'
-        ];
+        return ['success' => true, 'mensaje' => 'Usuario registrado con éxito'];
     } else {
-        return [
-            'success' => false,
-            'mensaje' => 'Error al registrar usuario'
-        ];
+        return ['success' => false, 'mensaje' => 'Error al registrar usuario'];
     }
 }
 
@@ -57,15 +52,9 @@ function listarUsuarios() {
 function eliminarUsuario($nombre) {
     global $usuarioModel;
     if ($usuarioModel->eliminar($nombre)) {
-        return [
-            'success' => true,
-            'mensaje' => 'Usuario eliminado'
-        ];
+        return ['success' => true, 'mensaje' => 'Usuario eliminado'];
     } else {
-        return [
-            'success' => false,
-            'mensaje' => 'Error al eliminar'
-        ];
+        return ['success' => false, 'mensaje' => 'Error al eliminar'];
     }
 }
 
@@ -80,18 +69,11 @@ function modificarUsuario($nombre, $nuevoNombre, $nuevoCorreo = '', $nuevoTipoUs
     } else {
         $ok = $usuarioModel->modificar($nombre, $nuevoNombre, null, $nuevoTipoUsuario);
     }
+
     if ($ok) {
-        return [
-            'success' => true,
-            'mensaje' => 'Usuario actualizado'
-        ];
+        return ['success' => true, 'mensaje' => 'Usuario actualizado'];
     } else {
-        return [
-            'success' => false,
-            'mensaje' => 'Error al actualizar'
-        ];
+        return ['success' => false, 'mensaje' => 'Error al actualizar'];
     }
 }
-
-
 ?>

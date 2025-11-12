@@ -79,6 +79,106 @@ INSERT INTO `cargadores` VALUES (7,'cargador1',-34.722095966065,-55.956424580844
 UNLOCK TABLES;
 
 --
+-- Table structure for table `facturas`
+--
+
+DROP TABLE IF EXISTS `facturas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `facturas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pago_id` int NOT NULL,
+  `numero` varchar(40) NOT NULL,
+  `fecha_emision` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `total` decimal(10,2) NOT NULL,
+  `moneda` varchar(10) DEFAULT 'UYU',
+  `datos_json` json DEFAULT NULL,
+  `pdf_path` varchar(255) DEFAULT NULL,
+  `url_pdf` varchar(200) DEFAULT NULL,
+  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `numero` (`numero`),
+  KEY `fk_factura_pago` (`pago_id`),
+  CONSTRAINT `fk_factura_pago` FOREIGN KEY (`pago_id`) REFERENCES `pagos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `facturas`
+--
+
+LOCK TABLES `facturas` WRITE;
+/*!40000 ALTER TABLE `facturas` DISABLE KEYS */;
+INSERT INTO `facturas` VALUES (1,1,'FAC-20251112-000001','2025-11-12 03:22:17',500.00,'UYU','{\"monto\": \"500.00\", \"estado\": \"aprobado\", \"metodo_id\": 2, \"reserva_id\": 2, \"usuario_id\": \"usuario\"}','factura_FAC-20251112-000001.pdf',NULL,'2025-11-12 06:22:17');
+/*!40000 ALTER TABLE `facturas` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `metodos_pago`
+--
+
+DROP TABLE IF EXISTS `metodos_pago`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `metodos_pago` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(60) NOT NULL,
+  `tipo` enum('tarjeta','prepaga','otros') NOT NULL,
+  `activo` tinyint(1) DEFAULT '1',
+  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `metodos_pago`
+--
+
+LOCK TABLES `metodos_pago` WRITE;
+/*!40000 ALTER TABLE `metodos_pago` DISABLE KEYS */;
+INSERT INTO `metodos_pago` VALUES (1,'Tarjeta de Crédito','tarjeta',1,'2025-11-12 05:09:20'),(2,'Tarjeta de Débito','tarjeta',1,'2025-11-12 05:09:20'),(3,'Cuenta Prepaga','prepaga',1,'2025-11-12 05:09:20');
+/*!40000 ALTER TABLE `metodos_pago` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pagos`
+--
+
+DROP TABLE IF EXISTS `pagos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pagos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `reserva_id` int NOT NULL,
+  `usuario_id` varchar(50) NOT NULL,
+  `metodo_id` int NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `moneda` varchar(10) DEFAULT 'UYU',
+  `estado` enum('iniciado','pendiente','aprobado','rechazado','cancelado') DEFAULT 'iniciado',
+  `referencia_externa` varchar(120) DEFAULT NULL,
+  `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `confirmado_en` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_pago_reserva` (`reserva_id`),
+  KEY `fk_pago_usuario` (`usuario_id`),
+  KEY `fk_pago_metodo` (`metodo_id`),
+  CONSTRAINT `fk_pago_metodo` FOREIGN KEY (`metodo_id`) REFERENCES `metodos_pago` (`id`),
+  CONSTRAINT `fk_pago_reserva` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_pago_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`usuario`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pagos`
+--
+
+LOCK TABLES `pagos` WRITE;
+/*!40000 ALTER TABLE `pagos` DISABLE KEYS */;
+INSERT INTO `pagos` VALUES (1,2,'usuario',2,500.00,'UYU','aprobado',NULL,'2025-11-12 06:22:14','2025-11-12 06:22:14');
+/*!40000 ALTER TABLE `pagos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `reservas`
 --
 
@@ -92,13 +192,15 @@ CREATE TABLE `reservas` (
   `inicio` datetime NOT NULL,
   `fin` datetime NOT NULL,
   `estado` varchar(30) DEFAULT 'confirmada',
+  `monto` decimal(10,2) DEFAULT '0.00',
+  `pagado` tinyint(1) DEFAULT '0',
   `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `usuario` (`usuario`),
   KEY `cargador_id` (`cargador_id`),
   CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`usuario`) REFERENCES `usuarios` (`usuario`) ON DELETE CASCADE,
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`cargador_id`) REFERENCES `cargadores` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -107,7 +209,7 @@ CREATE TABLE `reservas` (
 
 LOCK TABLES `reservas` WRITE;
 /*!40000 ALTER TABLE `reservas` DISABLE KEYS */;
-INSERT INTO `reservas` VALUES (1,'usuario',7,'2025-11-11 17:00:00','2025-11-11 18:00:00','cancelada','2025-11-11 19:57:41');
+INSERT INTO `reservas` VALUES (1,'usuario',7,'2025-11-11 17:00:00','2025-11-11 18:00:00','cancelada',0.00,0,'2025-11-11 19:57:41'),(2,'usuario',7,'2025-11-12 02:45:00','2025-11-12 03:45:00','completada',500.00,1,'2025-11-12 05:41:33');
 /*!40000 ALTER TABLE `reservas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -133,7 +235,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES ('admin','admin@gmail.com','$2y$10$E39mbImb/JbZf8iFce/aoejoBoIvrVi.M00jWWSLPZEd4ncmHC42O','admin'),('cargador','cargador@gmail.com','$2y$10$qvqnDkepLc0J65mFD1EKYesJdN5cv7OvV359OmFrOjwI7.Cw5bfWu','cargador'),('nico','nico@gmail.com','$2y$10$mO5TnDsORUgv3coGzGCvyerHBYMUZtZCkyCEOVIAsu1KeNRUE0PWO','cliente'),('pepito','pepito@gmail.com','$2y$10$vkoYJnjfrMdVDppHynd0fOykAb.NxaIaKkCUSX1E7w8r0nIz6DgaO','cliente'),('santi','santisuarez@gmail.com','$2y$10$GpKd4EhmH1NTVn41WfucOeok6aLrAm4KwhDZqAu2EokDO8079A88u','cliente'),('usuario','usuario@gmail.com','$2y$10$NtMWSeUsLb5YSW.7CMliD.2d4nN4..6OFQlWVwghB1tW7RsVq3j56','cliente');
+INSERT INTO `usuarios` VALUES ('admin','admin@gmail.com','$2y$10$E39mbImb/JbZf8iFce/aoejoBoIvrVi.M00jWWSLPZEd4ncmHC42O','admin'),('cargador','cargador@gmail.com','$2y$10$qvqnDkepLc0J65mFD1EKYesJdN5cv7OvV359OmFrOjwI7.Cw5bfWu','cargador'),('nico','nico@gmail.com','$2y$10$mO5TnDsORUgv3coGzGCvyerHBYMUZtZCkyCEOVIAsu1KeNRUE0PWO','cliente'),('pepito','pepito@gmail.com','$2y$10$vkoYJnjfrMdVDppHynd0fOykAb.NxaIaKkCUSX1E7w8r0nIz6DgaO','cliente'),('prueba','prueba@gmail.com','$2y$10$Lkpf9BeYSesVxthc9Bt/Z.DSDn8w7MUeOD/pYmFJXN83SHnF5XQ1C','cliente'),('santi','santisuarez@gmail.com','$2y$10$GpKd4EhmH1NTVn41WfucOeok6aLrAm4KwhDZqAu2EokDO8079A88u','cliente'),('usuario','usuario@gmail.com','$2y$10$NtMWSeUsLb5YSW.7CMliD.2d4nN4..6OFQlWVwghB1tW7RsVq3j56','cliente');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -175,4 +277,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-11 17:33:25
+-- Dump completed on 2025-11-12 17:36:27

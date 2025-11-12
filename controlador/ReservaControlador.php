@@ -2,41 +2,32 @@
 require_once __DIR__ . '/../modelo/Reserva.php';
 
 class ReservaControlador {
-    public static function crearReserva($usuario, $cargador_id, $inicio, $fin) {
-        if (empty($usuario) || empty($cargador_id) || empty($inicio) || empty($fin)) {
-            return ['exito' => false, 'mensaje' => 'Datos incompletos'];
-        }
-        $reserva = new Reserva();
-        return $reserva->crear($usuario, $cargador_id, $inicio, $fin);
+    private $reserva;
+    public function __construct(PDO $db){ $this->reserva = new Reserva($db); }
+
+    public function listarReservasUsuario(string $usuario){
+        $uid = $this->reserva->usuarioIdPorUsuario($usuario);
+        if(!$uid) return [];
+        return $this->reserva->listarPorUsuarioId($uid);
     }
 
-    public static function cancelarReserva($usuario, $reserva_id) {
-        if (empty($usuario) || empty($reserva_id)) {
-            return ['exito' => false, 'mensaje' => 'Datos incompletos para cancelar'];
-        }
-        $reserva = new Reserva();
-        return $reserva->cancelar($usuario, $reserva_id);
+    public function crear(string $usuario, int $cargadorId, string $inicio, string $fin){
+        $uid = $this->reserva->usuarioIdPorUsuario($usuario);
+        if(!$uid) return ['exito'=>false,'mensaje'=>'Usuario no encontrado'];
+        return $this->reserva->crear($uid,$cargadorId,$inicio,$fin);
     }
 
-    public static function listarReservasUsuario($usuario) {
-        if (empty($usuario)) {
-            return [];
-        }
-        $reserva = new Reserva();
-        return $reserva->listarPorUsuario($usuario);
+    public function cancelar(string $usuario, int $reservaId){
+        $uid = $this->reserva->usuarioIdPorUsuario($usuario);
+        if(!$uid) return ['exito'=>false,'mensaje'=>'Usuario no encontrado'];
+        return $this->reserva->cancelar($uid,$reservaId);
     }
 
-    public static function listarReservasCargador($cargador_id) {
-        if (empty($cargador_id)) {
-            return [];
-        }
-        $reserva = new Reserva();
-        return $reserva->listarPorCargador($cargador_id);
+    public function marcarReservasCompletadas(){
+        $this->reserva->marcarCompletadasSiVencidas();
     }
 
-    public static function marcarReservasCompletadas() {
-        $reserva = new Reserva();
-        return $reserva->marcarReservasCompletadas();
+    public function obtenerPagoPorReserva(int $reservaId){
+        return $this->reserva->obtenerPagoPorReserva($reservaId);
     }
 }
-?>

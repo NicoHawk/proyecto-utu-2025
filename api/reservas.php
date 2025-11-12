@@ -1,71 +1,70 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 header('Content-Type: application/json; charset=utf-8');
 session_start();
+ob_start();
 
+require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../controlador/ReservaControlador.php';
 
-$metodo = $_SERVER['REQUEST_METHOD'];
-$accion = $_GET['accion'] ?? $_POST['accion'] ?? null;
+$pdo = conectar();
 
-// Si viene JSON, extraer también la acción desde el cuerpo
-$rawBody = file_get_contents('php://input');
-$jsonBody = null;
-if (!empty($rawBody) && isset($_SERVER['CONTENT_TYPE']) && stripos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
-    $jsonBody = json_decode($rawBody, true);
-    if (!$accion && is_array($jsonBody) && isset($jsonBody['accion'])) {
-        $accion = $jsonBody['accion'];
-    }
-}
-
-function responder($data, $codigo = 200) {
-    http_response_code($codigo);
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+function responder($d,$c=200){
+    if (ob_get_length()) ob_clean();
+    http_response_code($c);
+    echo json_encode($d, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-if (!isset($_SESSION['usuario'])) {
-    responder(['exito' => false, 'mensaje' => 'No autenticado'], 401);
-}
-
-// Usar directamente el nombre de usuario de la sesión (tu tabla usa VARCHAR, no INT)
+if (!isset($_SESSION['usuario'])) responder(['exito'=>false,'mensaje'=>'No autenticado'],401);
 $usuario = $_SESSION['usuario'];
 
 try {
-    if ($metodo === 'GET') {
-        if ($accion === 'listar_usuario') {
-            ReservaControlador::marcarReservasCompletadas();
-            $reservas = ReservaControlador::listarReservasUsuario($usuario);
-            responder(['exito' => true, 'reservas' => $reservas]);
-        } elseif ($accion === 'listar_cargador') {
-            ReservaControlador::marcarReservasCompletadas();
-            $cargador_id = intval($_GET['cargador_id'] ?? 0);
-            if ($cargador_id <= 0) responder(['exito' => false, 'mensaje' => 'cargador_id requerido'], 400);
-            $resp = ReservaControlador::listarReservasCargador($cargador_id);
-            responder($resp);
-        } else {
-            responder(['exito' => false, 'mensaje' => 'Acción GET no reconocida'], 400);
+    $ctrl = new ReservaControlador($pdo);
+} catch (Throwable $e) {
+    responder(['exito'=>false,'mensaje'=>'Error al crear controlador','detalle'=>$e->getMessage()],500);
+}
+
+$accion = $_GET['accion'] ?? $_POST['accion'] ?? null;
+$raw = file_get_contents('php://input');
+$isJson = isset($_SERVER['CONTENT_TYPE']) && stripos($_SERVER['CONTENT_TYPE'],'application/json')!==false;
+$body = $isJson ? json_decode($raw,true) : null;
+if(!$accion && is_array($body) && isset($body['accion'])) $accion = $body['accion'];
+
+try {
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        switch ($accion) {
+            case 'listar_usuario':
+                $ctrl->marcarReservasCompletadas();
+                $reservas = $ctrl->listarReservasUsuario($usuario);
+                responder(['exito'=>true,'reservas'=>$reservas]);
+            case 'detalle_pago_reserva':
+                $id = intval($_GET['id'] ?? 0);
+                responder($ctrl->obtenerPagoPorReserva($id));
+            default:
+                responder(['exito'=>false,'mensaje'=>'Acción GET no reconocida'],400);
         }
-    } elseif ($metodo === 'POST') {
-        if ($accion === 'crear') {
-            $input = is_array($jsonBody) ? $jsonBody : ($_POST ?: []);
-            $cargador_id = intval($input['cargador_id'] ?? 0);
-            $inicio = $input['inicio'] ?? null;
-            $fin = $input['fin'] ?? null;
-            if ($cargador_id <= 0 || !$inicio || !$fin) responder(['exito' => false, 'mensaje' => 'Datos incompletos'], 400);
-            $resp = ReservaControlador::crearReserva($usuario, $cargador_id, $inicio, $fin);
-            responder($resp, $resp['exito'] ? 200 : 409);
-        } elseif ($accion === 'cancelar') {
-            $input = is_array($jsonBody) ? $jsonBody : ($_POST ?: []);
-            $reserva_id = intval($input['reserva_id'] ?? 0);
-            if ($reserva_id <= 0) responder(['exito' => false, 'mensaje' => 'reserva_id requerido'], 400);
-            $resp = ReservaControlador::cancelarReserva($usuario, $reserva_id);
-            responder($resp);
-        } else {
-            responder(['exito' => false, 'mensaje' => 'Acción POST no reconocida'], 400);
+    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $data = is_array($body) ? $body : $_POST;
+        switch ($accion) {
+            case 'crear':
+                $cargadorId = intval($data['cargador_id'] ?? 0);
+                $inicio     = trim($data['inicio'] ?? '');
+                $fin        = trim($data['fin'] ?? '');
+                if ($cargadorId<=0 || !$inicio || !$fin) responder(['exito'=>false,'mensaje'=>'Datos incompletos'],400);
+                responder($ctrl->crear($usuario,$cargadorId,$inicio,$fin));
+            case 'cancelar':
+                $reservaId = intval($data['reserva_id'] ?? 0);
+                if ($reservaId<=0) responder(['exito'=>false,'mensaje'=>'reserva_id requerido'],400);
+                responder($ctrl->cancelar($usuario,$reservaId));
+            default:
+                responder(['exito'=>false,'mensaje'=>'Acción POST no reconocida'],400);
         }
     } else {
-        responder(['exito' => false, 'mensaje' => 'Método no permitido'], 405);
+        responder(['exito'=>false,'mensaje'=>'Método no permitido'],405);
     }
-} catch (Exception $e) {
-    responder(['exito' => false, 'mensaje' => 'Error del servidor', 'detalle' => $e->getMessage()], 500);
+} catch (Throwable $e) {
+    responder(['exito'=>false,'mensaje'=>'Error en servidor','detalle'=>$e->getMessage(),'trace'=>$e->getTraceAsString()],500);
 }

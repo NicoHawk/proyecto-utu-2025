@@ -42,6 +42,10 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
                 <span class="sidebar-icon">📋</span>
                 <span class="sidebar-text">Historial</span>
             </li>
+            <li class="sidebar-item" data-tab="pagos">
+                <span class="sidebar-icon">💳</span>
+                <span class="sidebar-text">Pagos</span>
+            </li>
             <li class="sidebar-item" onclick="window.location.href='logout.php'">
                 <span class="sidebar-icon">🚪</span>
                 <span class="sidebar-text">Salir</span>
@@ -248,6 +252,29 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
                 💡 <strong>Próximamente:</strong> Podrás ver un historial completo de viajes planificados con estaciones utilizadas, consumos estimados y más detalles.
             </p>
         </div>
+
+        <!-- Pestaña Pagos -->
+<div id="tab-pagos" class="tab-content" style="display: none;">
+    <h1>Mis Pagos y Facturas</h1>
+    <p style="color: #b2ebf2; text-shadow: 1px 1px 4px #222;">Consultá tus pagos realizados y descargá tus facturas</p>
+
+    <h2 style="margin-top:32px;">Historial de Pagos</h2>
+    <table id="tablaPagos" style="width:100%;margin-bottom:40px;">
+        <thead>
+            <tr>
+                <th>ID Pago</th>
+                <th>Reserva</th>
+                <th>Fecha</th>
+                <th>Método</th>
+                <th>Monto</th>
+                <th>Estado</th>
+                <th>Factura</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
     </div>
 
     <!-- Modal de Reserva (selección con calendario y hora) -->
@@ -305,6 +332,23 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
             </div>
         </div>
     </div>
+
+    <!-- Modal Pago -->
+<div id="modalPago" class="modal">
+  <div class="modal-content">
+    <span class="close close-pago">&times;</span>
+    <h2>Pagar reserva</h2>
+    <form id="formPago">
+      <input type="hidden" id="pagoReservaId">
+      <label>Método de pago</label>
+      <select id="metodoPago" required></select>
+      <label>Monto</label>
+      <input type="number" id="pagoMonto" step="0.01" min="0" required>
+      <button type="submit" style="margin-top:16px;">Pagar</button>
+    </form>
+    <div id="mensajePago" style="margin-top:12px;"></div>
+  </div>
+</div>
 
     <script>
         // Sidebar -> cambiar pestañas
@@ -1198,30 +1242,20 @@ async function trazarRutaYSugerir() {
                 });
                 bateriaActualPct = bateriaDespuesPct;
                 kmRestantes = totalKm - kmRecorridos;
-                if (paradaNum > 10) break;
+                if (paradaNum > 10) break; // Limitar a 10 paradas esenciales
             }
+
             return resultado;
         }
 
-        paradasRecomendadas = calcularParadasRecomendadas(cercanas, coords, totalKm, autoAutonomia, autoBateria, bufferKm);
-
-        capaParadas.clearLayers();
-        paradasRecomendadas.forEach(p => {
-            const est = estaciones.find(e=>e.id===p.id);
-            if (!est) return;
-            L.circleMarker([est.latitud, est.longitud],
-                { radius:10, color: p.tipo==='esencial' ? '#ff3d00' : '#ffea00',
-                  fillColor: p.tipo==='esencial' ? '#ff6e40' : '#ffd700', fillOpacity:0.75, weight:3 }
-            ).addTo(capaParadas)
-             .bindTooltip(
-                `${p.tipo==='esencial'?'🔴':'🟡'} Parada ${p.numParada}\n📍 ${p.kmDesdeOrigen}km\n${p.bateriaAlLlegar}% → ${p.bateriaDespues}%\n` +
-                (p.tiempoEstimadoMin ? `⏱️ ${p.tiempoEstimadoMin} min` : ''),
-                {permanent:false}
-             );
-        });
-        renderPanelEstaciones(cercanas, paradasRecomendadas);
-        mostrarResumenRuta(totalKm, autoAutonomia, autoBateria, paradasRecomendadas);
-        // FIN de planificado y pintado
+        // Calcular y mostrar paradas recomendadas
+        const paradas = calcularParadasRecomendadas(cercanas, coords, totalKm, autoAutonomia, autoBateria, bufferKm);
+        console.log('🛑 Paradas recomendadas:', paradas);
+        paradasRecomendadas = paradas;
+        renderPanelEstaciones(cercanas, paradas);
+        
+        // Mostrar resumen de ruta
+        mostrarResumenRuta(totalKm, autoAutonomia, autoBateria, paradas);
     } catch (err) {
         console.error('Planificar error:', err);
         alert('No se pudo planificar la ruta: ' + err.message);
@@ -1304,7 +1338,6 @@ function listarReservas() {
     fetch('../api/reservas.php?accion=listar_usuario', { cache: 'no-store' })
       .then(r=>r.json())
       .then(resp => {
-          console.log('📡 listar_usuario:', resp);
           const tbody = document.querySelector('#tablaReservas tbody');
           tbody.innerHTML = '';
 
@@ -1315,7 +1348,6 @@ function listarReservas() {
               const finStr = r.fin || '';
               const finDate = finStr ? new Date(finStr.replace(' ', 'T')) : null;
               const estado = String(r.estado || '').toLowerCase();
-              // Activas = confirmadas Y futuras
               return estado === 'confirmada' && finDate && finDate > ahora;
           });
 
@@ -1326,12 +1358,22 @@ function listarReservas() {
 
           activas.forEach(r => {
               const estacion = r.estacion || (r.cargador_id ? `Estación #${r.cargador_id}` : '-');
+              const pagado = Number(r.pagado || 0) === 1;
+              const monto = (typeof r.monto !== 'undefined' && r.monto !== null) ? parseFloat(r.monto) : 0;
+
+              let acciones = `<button class="btn-cancelar-reserva" data-id="${r.id}">Cancelar</button>`;
+              if (!pagado) {
+                  acciones += ` <button class="btn-pagar-reserva" data-id="${r.id}" data-monto="${monto.toFixed(2)}">Pagar</button>`;
+              } else {
+                  acciones += ` <button class="btn-factura" data-id="${r.id}">Factura</button>`;
+              }
+
               const tr = document.createElement('tr');
               tr.innerHTML = `<td>${estacion}</td>
                               <td>${r.inicio || '-'}</td>
                               <td>${r.fin || '-'}</td>
                               <td>${r.estado || '-'}</td>
-                              <td><button class="btn-cancelar-reserva" data-id="${r.id}">Cancelar</button></td>`;
+                              <td>${acciones}</td>`;
               tbody.appendChild(tr);
               tr.querySelector('.btn-cancelar-reserva').addEventListener('click', () => cancelarReserva(r.id));
           });
@@ -1434,6 +1476,12 @@ document.getElementById('formReserva').addEventListener('submit', function(e) {
     
     const payload = {
         accion: 'crear',
+       
+
+       
+       
+       
+       
         cargador_id: idNumerico,
         inicio: inicio,
         fin: fin
@@ -1445,7 +1493,7 @@ document.getElementById('formReserva').addEventListener('submit', function(e) {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify(payload)
-    })
+                         })
     .then(r => {
         console.log('📡 Respuesta status:', r.status);
         return r.text().then(text => {
@@ -1467,6 +1515,7 @@ document.getElementById('formReserva').addEventListener('submit', function(e) {
         if (resp.exito) {
             msg.innerHTML = '✅ Reserva confirmada exitosamente';
             msg.className = 'mensaje exito';
+            
             
             // 🔥 REFRESCAR INMEDIATAMENTE (sin esperar 2 segundos)
             console.log('🔄 Refrescando estados inmediatamente...');
@@ -1647,7 +1696,6 @@ function cargarHistorialReservas() {
           const ahora = new Date();
           const pasadas = reservas.filter(r => {
               const estado = String(r.estado || '').toLowerCase();
-              // Mostrar en historial: canceladas O completadas O pasadas
               if (estado === 'cancelada' || estado === 'completada') return true;
               const finStr = r.fin || '';
               if (!finStr) return false;
@@ -1663,7 +1711,7 @@ function cargarHistorialReservas() {
           pasadas.sort((a, b) => {
               const aIni = new Date((a.inicio || '').replace(' ', 'T'));
               const bIni = new Date((b.inicio || '').replace(' ', 'T'));
-              return bIni - aIni; // Más recientes primero
+              return bIni - aIni;
           });
 
           pasadas.forEach(r => {
@@ -1691,6 +1739,203 @@ function cargarHistorialReservas() {
           }
       });
 }
+
+// Métodos de pago - Cargar y manejar pagos
+function cargarMetodosPago(){
+  fetch('../api/pagos.php?accion=metodos', {cache:'no-store'})
+    .then(r=>r.json())
+    .then(d=>{
+      const sel = document.getElementById('metodoPago');
+      sel.innerHTML = '<option value="">Seleccionar...</option>';
+      (d.metodos||[]).forEach(m=>{
+        sel.innerHTML += `<option value="${m.id}">${m.nombre}</option>`;
+      });
+    })
+    .catch(()=>{ document.getElementById('metodoPago').innerHTML = '<option value="">Error</option>'; });
+}
+
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('btn-pagar-reserva')) {
+    document.getElementById('pagoReservaId').value = e.target.dataset.id;
+    document.getElementById('pagoMonto').value = e.target.dataset.monto || 0;
+    document.getElementById('mensajePago').textContent = '';
+    document.getElementById('modalPago').style.display='block';
+    cargarMetodosPago();
+  }
+  if (e.target.classList.contains('btn-factura')) {
+    const reservaId = e.target.dataset.id;
+    fetch('../api/reservas.php?accion=detalle_pago_reserva&id='+reservaId)
+      .then(r=>r.json())
+      .then(dp=>{
+        if (!dp.pago_id) { alert('No se encontró pago asociado'); return; }
+        window.open(`../api/facturas.php?accion=descargar&pago_id=${dp.pago_id}`, '_blank');
+      })
+      .catch(err => alert('Error: ' + err.message));
+  }
+});
+
+document.getElementById('formPago').addEventListener('submit', e=>{
+  e.preventDefault();
+  const reservaId = document.getElementById('pagoReservaId').value;
+  const metodoId  = document.getElementById('metodoPago').value;
+  const monto     = document.getElementById('pagoMonto').value;
+
+  const fd = new FormData();
+  fd.append('accion','iniciar');
+  fd.append('reserva_id',reservaId);
+  fd.append('metodo_id',metodoId);
+  fd.append('monto',monto);
+
+  fetch('../api/pagos.php',{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(p=>{
+      if(!p.exito){ mostrarMsgPago('Error al iniciar pago','error'); return; }
+      const fd2 = new FormData();
+      fd2.append('accion','confirmar');
+      fd2.append('pago_id',p.pago_id);
+      fd2.append('estado','aprobado');
+      return fetch('../api/pagos.php',{method:'POST',body:fd2})
+        .then(r=>r.json())
+        .then(res=>{
+          if(res.exito){
+            mostrarMsgPago('Pago aprobado','exito');
+            setTimeout(()=>{
+              document.getElementById('modalPago').style.display='none';
+              listarReservas();
+            },800);
+          } else mostrarMsgPago('Error al confirmar','error');
+        });
+    })
+    .catch(()=>mostrarMsgPago('Error de conexión','error'));
+});
+
+function mostrarMsgPago(t, tipo){
+  const d = document.getElementById('mensajePago');
+  d.textContent = t;
+  d.className = 'mensaje ' + tipo;
+}
+
+document.querySelectorAll('.close-pago').forEach(c=>c.addEventListener('click',()=> {
+  document.getElementById('modalPago').style.display='none';
+}));
+
+// Cargar pagos cuando se abre la pestaña
+let pagosCargado = false;
+document.querySelector('[data-tab="pagos"]')?.addEventListener('click', () => {
+    console.log('💳 Pestaña Pagos clickeada');
+    cargarPagos();
+});
+
+function cargarPagos() {
+    console.log('💳 Cargando pagos del usuario...');
+    fetch('../api/pagos.php?accion=listar_usuario', { cache: 'no-store' })
+      .then(r => {
+          console.log('📡 Status response:', r.status);
+          return r.json();
+      })
+      .then(resp => {
+          console.log('📊 Pagos recibidos:', resp);
+          const tbody = document.querySelector('#tablaPagos tbody');
+          if (!tbody) {
+              console.error('❌ No se encontró tbody de tablaPagos');
+              return;
+          }
+          tbody.innerHTML = '';
+
+          const pagos = Array.isArray(resp?.pagos) ? resp.pagos : [];
+          console.log('📈 Total de pagos:', pagos.length);
+
+          if (!pagos.length) {
+              tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No tenés pagos registrados</td></tr>';
+              return;
+          }
+
+          pagos.forEach((p, idx) => {
+              console.log(`  💳 Pago ${idx + 1}:`, p);
+              const pagoId = p.pago_id || '-';
+              const reservaInfo = p.estacion_nombre 
+                ? `${p.estacion_nombre}<br><small style="color:#b2ebf2;">${p.reserva_inicio || ''} - ${p.reserva_fin || ''}</small>`
+                : `Reserva #${p.reserva_id || '-'}`;
+              const fecha = p.fecha_pago ? new Date(p.fecha_pago).toLocaleString('es-UY') : '-';
+              const metodo = p.metodo_nombre || '-';
+              const monto = p.monto ? `${p.moneda || 'UYU'} ${parseFloat(p.monto).toFixed(2)}` : '-';
+              const estado = p.pago_estado || '-';
+              
+              const estadoClass = estado === 'aprobado' ? 'estado-completada' 
+                                : estado === 'pendiente' ? 'estado-badge' 
+                                : 'estado-cancelada';
+              const estadoBadge = `<span class="${estadoClass}">${estado}</span>`;
+
+              let facturaBtn = '-';
+              if (estado === 'aprobado') {
+                  if (p.pdf_path) {
+                      facturaBtn = `<button class="btn-descargar-factura" data-pago-id="${pagoId}" title="Descargar PDF" style="background:#10b981;color:white;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">📄 Descargar</button>`;
+                  } else {
+                      facturaBtn = `<button class="btn-generar-factura" data-pago-id="${pagoId}" title="Generar PDF" style="background:#3b82f6;color:white;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">⚙️ Generar</button>`;
+                  }
+              }
+
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                  <td>#${pagoId}</td>
+                  <td>${reservaInfo}</td>
+                  <td>${fecha}</td>
+                  <td>${metodo}</td>
+                  <td><strong>${monto}</strong></td>
+                  <td>${estadoBadge}</td>
+                  <td>${facturaBtn}</td>
+              `;
+              tbody.appendChild(tr);
+          });
+      })
+      .catch(err => {
+          console.error('❌ Error al cargar pagos:', err);
+          const tbody = document.querySelector('#tablaPagos tbody');
+          if (tbody) {
+              tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ef4444;">Error al cargar pagos: ' + err.message + '</td></tr>';
+          }
+      });
+}
+
+// Manejar clics en botones de factura
+document.addEventListener('click', e => {
+    if (e.target.classList.contains('btn-descargar-factura')) {
+        const pagoId = e.target.dataset.pagoId;
+        console.log('📥 Descargando factura para pago:', pagoId);
+        window.open(`../api/facturas.php?accion=descargar&pago_id=${pagoId}`, '_blank');
+    }
+    
+    if (e.target.classList.contains('btn-generar-factura')) {
+        const pagoId = e.target.dataset.pagoId;
+        const btn = e.target;
+        const textoOriginal = btn.textContent;
+        
+        btn.disabled = true;
+        btn.textContent = '⏳ Generando...';
+        
+        console.log('⚙️ Generando factura para pago:', pagoId);
+        
+        fetch(`../api/facturas.php?accion=generar&pago_id=${pagoId}`)
+          .then(r => r.json())
+          .then(resp => {
+              if (resp.exito) {
+                  console.log('✅ Factura generada:', resp.pdf);
+                  window.open(`../api/facturas.php?accion=descargar&pago_id=${pagoId}`, '_blank');
+                  setTimeout(() => cargarPagos(), 500);
+              } else {
+                  alert('Error al generar factura: ' + (resp.mensaje || 'Error desconocido'));
+                  btn.disabled = false;
+                  btn.textContent = textoOriginal;
+              }
+          })
+          .catch(err => {
+              console.error('❌ Error:', err);
+              alert('Error de conexión: ' + err.message);
+              btn.disabled = false;
+              btn.textContent = textoOriginal;
+          });
+    }
+});
     </script>
 
     <!-- Leaflet JS (sin clave) -->
