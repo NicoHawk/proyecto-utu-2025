@@ -23,6 +23,25 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
 </head>
 
 <body>
+    <!-- Selector de idioma arriba a la izquierda -->
+    <div class="language-selector-top closed">
+        <button class="lang-btn" onclick="toggleLangMenu()">
+            <span class="flag">🌐</span>
+            <span id="currentLang">ES</span>
+            <span class="arrow">▼</span>
+        </button>
+        <div id="langMenu" class="lang-menu hidden">
+            <button class="lang-option" onclick="changeLang('es')">
+                <span class="flag">🇪🇸</span>
+                <span>Español</span>
+            </button>
+            <button class="lang-option" onclick="changeLang('en')">
+                <span class="flag">🇺🇸</span>
+                <span>English</span>
+            </button>
+        </div>
+    </div>
+
     <!-- Sidebar -->
 
     <nav class="sidebar">
@@ -351,6 +370,69 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cliente') {
 </div>
 
     <script>
+        // Toggle menú de idioma
+        function toggleLangMenu() {
+            const menu = document.getElementById('langMenu');
+            const selector = document.querySelector('.language-selector-top');
+            menu.classList.toggle('hidden');
+            if (menu.classList.contains('hidden')) {
+                selector.classList.add('closed');
+            } else {
+                selector.classList.remove('closed');
+            }
+        }
+
+        // Cambiar idioma
+        function changeLang(lang) {
+            const currentLangSpan = document.getElementById('currentLang');
+            if (lang === 'es') {
+                currentLangSpan.textContent = 'ES';
+                // Sidebar
+                document.querySelectorAll('.sidebar-text')[0].textContent = 'Autos';
+                document.querySelectorAll('.sidebar-text')[1].textContent = 'Viajes';
+                document.querySelectorAll('.sidebar-text')[2].textContent = 'Historial';
+                document.querySelectorAll('.sidebar-text')[3].textContent = 'Pagos';
+                document.querySelectorAll('.sidebar-text')[4].textContent = 'Salir';
+                // Menú usuario
+                document.querySelector('.usuario-dropdown a:first-child').textContent = 'Editar perfil';
+                document.querySelector('.usuario-dropdown a:last-child').textContent = 'Cerrar sesión';
+                // Modal perfil
+                document.querySelector('#modalEditarPerfil h2').textContent = 'Editar Perfil';
+                document.querySelector('label[for="editUsuario"]').textContent = 'Nombre de Usuario:';
+                document.querySelector('label[for="editCorreo"]').textContent = 'Correo Electrónico:';
+                document.querySelector('label[for="editPassword"]').textContent = 'Nueva Contraseña (dejar en blanco para mantener la actual):';
+                document.querySelector('#formEditarPerfil button').textContent = 'Guardar Cambios';
+            } else if (lang === 'en') {
+                currentLangSpan.textContent = 'EN';
+                // Sidebar
+                document.querySelectorAll('.sidebar-text')[0].textContent = 'Cars';
+                document.querySelectorAll('.sidebar-text')[1].textContent = 'Trips';
+                document.querySelectorAll('.sidebar-text')[2].textContent = 'History';
+                document.querySelectorAll('.sidebar-text')[3].textContent = 'Payments';
+                document.querySelectorAll('.sidebar-text')[4].textContent = 'Logout';
+                // Menú usuario
+                document.querySelector('.usuario-dropdown a:first-child').textContent = 'Edit profile';
+                document.querySelector('.usuario-dropdown a:last-child').textContent = 'Logout';
+                // Modal perfil
+                document.querySelector('#modalEditarPerfil h2').textContent = 'Edit Profile';
+                document.querySelector('label[for="editUsuario"]').textContent = 'Username:';
+                document.querySelector('label[for="editCorreo"]').textContent = 'Email:';
+                document.querySelector('label[for="editPassword"]').textContent = 'New Password (leave blank to keep current):';
+                document.querySelector('#formEditarPerfil button').textContent = 'Save Changes';
+            }
+            toggleLangMenu();
+        }
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            const selector = document.querySelector('.language-selector-top');
+            const menu = document.getElementById('langMenu');
+            if (selector && !selector.contains(e.target)) {
+                menu.classList.add('hidden');
+                selector.classList.add('closed');
+            }
+        });
+
         // Sidebar -> cambiar pestañas
         document.querySelectorAll('.sidebar-item').forEach(item => {
             item.addEventListener('click', function() {

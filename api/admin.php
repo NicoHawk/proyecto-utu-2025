@@ -123,20 +123,20 @@ switch ($method) {
             $anio      = isset($data['anio']) ? (int)$data['anio'] : 0;
 
             echo json_encode(agregarAutoAdmin($usuario, $modelo, $marca, $conector, $autonomia, $anio));
-        } elseif (isset($data['accion']) && $data['accion'] === 'editar_auto') {
+        } elseif (isset($data['accion']) && $data['accion'] === 'eliminar_auto') {
+            verificarAdmin();
+            $id = isset($data['id']) ? (int)$data['id'] : 0;
+            echo json_encode(eliminarAutoAdmin($id));
+        } elseif (isset($data['accion']) && $data['accion'] === 'modificar_auto') {
             verificarAdmin();
             $id        = isset($data['id']) ? (int)$data['id'] : 0;
-            $modelo    = $data['modelo']   ?? '';
             $marca     = $data['marca']    ?? '';
+            $modelo    = $data['modelo']   ?? '';
             $conector  = $data['conector'] ?? '';
             $autonomia = isset($data['autonomia']) ? (int)$data['autonomia'] : 0;
             $anio      = isset($data['anio']) ? (int)$data['anio'] : 0;
 
             echo json_encode(editarAutoAdmin($id, $modelo, $marca, $conector, $autonomia, $anio));
-        } elseif (isset($data['accion']) && $data['accion'] === 'eliminar_auto') {
-            verificarAdmin();
-            $id = isset($data['id']) ? (int)$data['id'] : 0;
-            echo json_encode(eliminarAutoAdmin($id));
         } else {
             echo json_encode(['error' => 'Acción POST no soportada']);
         }

@@ -286,3 +286,108 @@ input[type="checkbox"] {
     70% { box-shadow: 0 0 0 8px rgba(31, 76, 205, 0.18), 0 0 36px rgba(31, 76, 205, 0.25); }
     100% { box-shadow: 0 0 0 0 rgba(31, 76, 205, 0.0), 0 0 0 rgba(31, 76, 205, 0.0); }
 }
+
+/* Selector de idioma arriba a la izquierda */
+.language-selector-top {
+    position: fixed;
+    top: 18px;
+    left: 24px;
+    z-index: 250;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.language-selector-top .lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: background .25s;
+}
+
+.language-selector-top .lang-btn:hover {
+    background: #1565c0;
+}
+
+.language-selector-top .lang-btn .arrow {
+    font-size: .65rem;
+    transition: transform .25s;
+}
+
+.language-selector-top .lang-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #ffffff;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    padding: 6px;
+    margin-top: 6px;
+    min-width: 160px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: fadeDropdown .25s ease;
+    z-index: 1200;
+}
+
+@keyframes fadeDropdown {
+    from { opacity:0; transform: translateY(-6px); }
+    to { opacity:1; transform: translateY(0); }
+}
+
+.language-selector-top .lang-menu.hidden {
+    display: none;
+}
+
+.language-selector-top .lang-option {
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    color: #1976d2;
+    transition: background .2s, color .2s;
+}
+
+.language-selector-top .lang-option:hover {
+    background: #e3f2fd;
+    color: #0d47a1;
+}
+
+.language-selector-top .flag {
+    font-size: 1rem;
+}
+
+.language-selector-top:not(.closed) .lang-btn .arrow {
+    transform: rotate(180deg);
+}
+
+@media (max-width: 600px) {
+    .language-selector-top {
+        top: 8px;
+        left: 8px;
+    }
+    .language-selector-top .lang-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    .language-selector-top .lang-menu {
+        min-width: 140px;
+    }
+}

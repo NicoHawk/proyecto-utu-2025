@@ -1,3 +1,58 @@
+## Versión 2.0.0 - 14 de Noviembre de 2025 🌐 Internacionalización (ES/EN)
+
+### 🎯 Resumen
+Implementación del sistema bilingüe en toda la app. Se unificó un header con logo + selector de idioma (ES/EN), se centralizaron textos y se añadió persistencia del idioma entre páginas.
+
+### 🆕 Novedades
+- Selector de idioma global (dropdown) con estado persistente.
+- Cambios de idioma en caliente sin recargar la página para: navegación y textos principales.
+- Página “Sobre Nosotros” finalizada con el mismo header y selector.
+- Contenido traducible centralizado en i18n/translations.json.
+
+### 🔧 Detalles Técnicos
+- Persistencia: localStorage key app_lang (valores: "es" | "en"). Idioma por defecto: es.
+- Aplicación de traducciones al cargar la vista y al cambiar el selector.
+- Fallback seguro: si una clave no existe en el idioma actual, se usa el texto en español.
+- Cierre del menú de idioma al hacer clic fuera y rotación de flecha cuando está abierto.
+- Estilos del header con blur y compatibilidad móvil.
+
+### 🗂️ Archivos creados/actualizados
+- Agregado: i18n/translations.json (diccionario base ES/EN).
+- Actualizados (header + selector + textos dinámicos):
+  - vista/index.php (Login)
+  - vista/principal.html (Inicio)
+  - vista/registro.html (Registro)
+  - vista/contacto.html (Sobre Nosotros)
+  - vista/cliente.php (Panel cliente)
+  - vista/cargador.php (Puntos de carga)
+  - vista/formulario.php (Formulario de reserva)
+- Estilos:
+  - styles/contacto.css → nuevas reglas para .top-bar, .language-selector, .lang-menu.
+  - styles/index.css → se mantiene como referencia visual; la barra superior se replica en contacto.
+
+### 🔤 Claves de traducción incluidas (ejemplos)
+- Navegación: nav.home, nav.signup, nav.contact
+- Login: login.title, login.email, login.password, login.submit, login.register
+- Sobre Nosotros: about.title, about.subtitle
+- Cliente/Reservas (mínimos para navbar y acciones visibles)
+
+### 👀 UX/Accesibilidad
+- Contraste y estados hover/active visibles en botones.
+- Área clickeable ampliada en el selector.
+- Navegación consistente entre páginas.
+
+### ✅ QA / Cómo probar
+1. Cambiar idioma con el botón ES/EN en cada vista.
+2. Navegar a otra página: el idioma debe persistir (localStorage).
+3. Volver a español/inglés y validar textos del header y títulos principales.
+
+### ⚠️ Notas
+- El contenido largo (tablas/labels internos) podrá integrarse al sistema central de i18n en iteraciones siguientes.
+- Para añadir nuevas cadenas, agregar clave en i18n/translations.json y referenciarla en la vista con su data-key o en el script de mapeo.
+
+---
+
+
 ## Versión 1.9.0 - 12 de Noviembre de 2025 💳
 
 ### 🎯 Resumen

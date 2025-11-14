@@ -266,3 +266,104 @@ button:hover, .register-btn:hover {
     color: #1976d2;
 }
 
+/* Selector de idioma desplegable */
+.language-selector {
+    position: relative;
+    display: inline-block;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: background .25s;
+}
+
+.lang-btn:hover {
+    background: #1565c0;
+}
+
+.lang-btn .arrow {
+    font-size: .65rem;
+    transition: transform .25s;
+}
+
+.lang-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    padding: 6px;
+    margin-top: 6px;
+    min-width: 160px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: fadeDropdown .25s ease;
+    z-index: 1200;
+}
+
+@keyframes fadeDropdown {
+    from { opacity:0; transform: translateY(-6px); }
+    to { opacity:1; transform: translateY(0); }
+}
+
+.lang-menu.hidden {
+    display: none;
+}
+
+.lang-option {
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    color: #1976d2;
+    transition: background .2s, color .2s;
+}
+
+.lang-option:hover {
+    background: #e3f2fd;
+    color: #0d47a1;
+}
+
+.flag {
+    font-size: 1rem;
+}
+
+/* Rotación de la flecha cuando el menú está abierto */
+.language-selector:not(.closed) .lang-btn .arrow {
+    transform: rotate(180deg);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .lang-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    .lang-menu {
+        min-width: 140px;
+    }
+}
+

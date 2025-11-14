@@ -12,7 +12,25 @@
         <div class="top-right">
             <a href="principal.html">Inicio</a>
             <a href="registro.html">Registrarse</a>
-            <a href="#">Contacto</a>
+            <a href="contacto.html">Contacto</a>
+            <!-- Selector de idioma -->
+            <div class="language-selector closed">
+                <button class="lang-btn" onclick="toggleLangMenu()">
+                    <span class="flag">🌐</span>
+                    <span id="currentLang">ES</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div id="langMenu" class="lang-menu hidden">
+                    <button class="lang-option" onclick="changeLang('es')">
+                        <span class="flag">🇪🇸</span>
+                        <span>Español</span>
+                    </button>
+                    <button class="lang-option" onclick="changeLang('en')">
+                        <span class="flag">🇺🇸</span>
+                        <span>English</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     <div class="container">
@@ -26,6 +44,55 @@
         <div id="mensaje" class="mensaje"></div>
     </div>
     <script>
+        // Toggle menú de idioma
+        function toggleLangMenu() {
+            const menu = document.getElementById('langMenu');
+            const selector = document.querySelector('.language-selector');
+            menu.classList.toggle('hidden');
+            if (menu.classList.contains('hidden')) {
+                selector.classList.add('closed');
+            } else {
+                selector.classList.remove('closed');
+            }
+        }
+
+        // Cambiar idioma
+        function changeLang(lang) {
+            const currentLangSpan = document.getElementById('currentLang');
+            if (lang === 'es') {
+                currentLangSpan.textContent = 'ES';
+                document.querySelector('h1').textContent = 'Iniciar Sesión';
+                document.getElementById('correo').placeholder = 'Correo electrónico';
+                document.getElementById('password').placeholder = 'Contraseña';
+                document.querySelector('form button[type="submit"]').textContent = 'Ingresar';
+                document.querySelector('.register-btn').textContent = 'Registrarse';
+                document.querySelectorAll('.top-right a')[0].textContent = 'Inicio';
+                document.querySelectorAll('.top-right a')[1].textContent = 'Registrarse';
+                document.querySelectorAll('.top-right a')[2].textContent = 'Contacto';
+            } else if (lang === 'en') {
+                currentLangSpan.textContent = 'EN';
+                document.querySelector('h1').textContent = 'Sign In';
+                document.getElementById('correo').placeholder = 'Email';
+                document.getElementById('password').placeholder = 'Password';
+                document.querySelector('form button[type="submit"]').textContent = 'Login';
+                document.querySelector('.register-btn').textContent = 'Sign Up';
+                document.querySelectorAll('.top-right a')[0].textContent = 'Home';
+                document.querySelectorAll('.top-right a')[1].textContent = 'Sign Up';
+                document.querySelectorAll('.top-right a')[2].textContent = 'Contact';
+            }
+            toggleLangMenu();
+        }
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            const selector = document.querySelector('.language-selector');
+            const menu = document.getElementById('langMenu');
+            if (selector && !selector.contains(e.target)) {
+                menu.classList.add('hidden');
+                selector.classList.add('closed');
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const loginForm = document.getElementById('loginForm');
             const mensajeDiv = document.getElementById('mensaje');

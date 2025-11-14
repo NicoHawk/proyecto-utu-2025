@@ -14,6 +14,25 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
     <link rel="stylesheet" href="../styles/cargador.css">
 </head>
 <body>
+    <!-- Selector de idioma -->
+    <div class="language-selector-top closed">
+        <button class="lang-btn" onclick="toggleLangMenu()">
+            <span class="flag">🌐</span>
+            <span id="currentLang">ES</span>
+            <span class="arrow">▼</span>
+        </button>
+        <div id="langMenu" class="lang-menu hidden">
+            <button class="lang-option" onclick="changeLang('es')">
+                <span class="flag">🇪🇸</span>
+                <span>Español</span>
+            </button>
+            <button class="lang-option" onclick="changeLang('en')">
+                <span class="flag">🇺🇸</span>
+                <span>English</span>
+            </button>
+        </div>
+    </div>
+
     <div class="usuario-menu">
         <div class="usuario-trigger">
             <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Usuario" class="icono-usuario">
@@ -25,14 +44,14 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
         </div>
     </div>
     <div class="container">
-        <h1>Panel de Cargador</h1>
-        <p>Has iniciado sesión como usuario de tipo <b>cargador</b>.<br>Aquí podrás gestionar los puntos de carga.</p>
+        <h1 id="titulo-panel">Panel de Cargador</h1>
+        <p id="descripcion-panel">Has iniciado sesión como usuario de tipo <b>cargador</b>.<br>Aquí podrás gestionar los puntos de carga.</p>
         
-        <h2 style="margin-bottom: 10px; color:#1976d2; margin-top:40px;">Mapa de cargadores</h2>
+        <h2 id="titulo-mapa" style="margin-bottom: 10px; color:#1976d2; margin-top:40px;">Mapa de cargadores</h2>
         <div id="map" style="width:100%; min-width:300px; height:340px; margin-bottom: 20px; border-radius: 16px; box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.13);"></div>
         
-        <h2 style="margin-top:40px;">Agregar Cargador</h2>
-        <p style="font-size:0.9em; color:#666; margin-bottom:12px;">Haz clic en el mapa para seleccionar la ubicación del cargador</p>
+        <h2 id="titulo-agregar" style="margin-top:40px;">Agregar Cargador</h2>
+        <p id="instruccion-mapa" style="font-size:0.9em; color:#666; margin-bottom:12px;">Haz clic en el mapa para seleccionar la ubicación del cargador</p>
         
         <form id="formCargador" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width:100%; margin-bottom:18px;">
             <input type="text" id="nombreCargador" placeholder="Nombre del cargador" required style="grid-column: 1 / -1;">
@@ -57,7 +76,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
             </select>
             
             <div style="grid-column: 1 / -1;">
-                <label style="display:block; margin-bottom:8px; font-weight:600; color:#1976d2;">Tipos de conectores disponibles:</label>
+                <label id="label-conectores" style="display:block; margin-bottom:8px; font-weight:600; color:#1976d2;">Tipos de conectores disponibles:</label>
                 <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px;">
                     <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
                         <input type="checkbox" name="conectores" value="Tipo 1" class="conector-checkbox">
@@ -90,14 +109,71 @@ if (!isset($_SESSION['usuario']) || $_SESSION['tipo_usuario'] !== 'cargador') {
                 </div>
             </div>
             
-            <button type="submit" disabled style="grid-column: 1 / -1; min-width:140px;">Agregar cargador</button>
+            <button type="submit" id="btn-agregar" disabled style="grid-column: 1 / -1; min-width:140px;">Agregar cargador</button>
             <span id="ubicacionSeleccionada" style="grid-column: 1 / -1; font-size: 0.9em; color: #555;"></span>
         </form>
 
-        <h2 style="margin-top:40px;">Listado de Cargadores</h2>
+        <h2 id="titulo-listado" style="margin-top:40px;">Listado de Cargadores</h2>
         <div id="tablaCargadores"></div>
     </div>
     <script>
+    // Toggle menú de idioma
+    function toggleLangMenu() {
+        const menu = document.getElementById('langMenu');
+        const selector = document.querySelector('.language-selector-top');
+        menu.classList.toggle('hidden');
+        if (menu.classList.contains('hidden')) {
+            selector.classList.add('closed');
+        } else {
+            selector.classList.remove('closed');
+        }
+    }
+
+    // Cambiar idioma
+    function changeLang(lang) {
+        const currentLangSpan = document.getElementById('currentLang');
+        if (lang === 'es') {
+            currentLangSpan.textContent = 'ES';
+            document.getElementById('titulo-panel').textContent = 'Panel de Cargador';
+            document.getElementById('descripcion-panel').innerHTML = 'Has iniciado sesión como usuario de tipo <b>cargador</b>.<br>Aquí podrás gestionar los puntos de carga.';
+            document.getElementById('titulo-mapa').textContent = 'Mapa de cargadores';
+            document.getElementById('titulo-agregar').textContent = 'Agregar Cargador';
+            document.getElementById('instruccion-mapa').textContent = 'Haz clic en el mapa para seleccionar la ubicación del cargador';
+            document.getElementById('nombreCargador').placeholder = 'Nombre del cargador';
+            document.getElementById('descripcionCargador').placeholder = 'Descripción (opcional)';
+            document.getElementById('potenciaCargador').placeholder = 'Potencia (kW)';
+            document.getElementById('label-conectores').textContent = 'Tipos de conectores disponibles:';
+            document.getElementById('btn-agregar').textContent = 'Agregar cargador';
+            document.getElementById('titulo-listado').textContent = 'Listado de Cargadores';
+            document.querySelector('.usuario-dropdown a').textContent = 'Cerrar sesión';
+        } else if (lang === 'en') {
+            currentLangSpan.textContent = 'EN';
+            document.getElementById('titulo-panel').textContent = 'Charger Panel';
+            document.getElementById('descripcion-panel').innerHTML = 'You are logged in as <b>charger</b> user.<br>Here you can manage charging points.';
+            document.getElementById('titulo-mapa').textContent = 'Chargers Map';
+            document.getElementById('titulo-agregar').textContent = 'Add Charger';
+            document.getElementById('instruccion-mapa').textContent = 'Click on the map to select the charger location';
+            document.getElementById('nombreCargador').placeholder = 'Charger name';
+            document.getElementById('descripcionCargador').placeholder = 'Description (optional)';
+            document.getElementById('potenciaCargador').placeholder = 'Power (kW)';
+            document.getElementById('label-conectores').textContent = 'Available connector types:';
+            document.getElementById('btn-agregar').textContent = 'Add charger';
+            document.getElementById('titulo-listado').textContent = 'Chargers List';
+            document.querySelector('.usuario-dropdown a').textContent = 'Logout';
+        }
+        toggleLangMenu();
+    }
+
+    // Cerrar menú al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        const selector = document.querySelector('.language-selector-top');
+        const menu = document.getElementById('langMenu');
+        if (selector && !selector.contains(e.target)) {
+            menu.classList.add('hidden');
+            selector.classList.add('closed');
+        }
+    });
+
     let map;
     let marcadores = {};
     let ubicacionTemporal = null;

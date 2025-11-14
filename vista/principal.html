@@ -13,6 +13,24 @@
         <div class="top-right">
             <a href="index.php">Iniciar Sesión</a>
             <a href="registro.html">Registrarse</a>
+            <!-- Selector de idioma -->
+            <div class="language-selector closed">
+                <button class="lang-btn" onclick="toggleLangMenu()">
+                    <span class="flag">🌐</span>
+                    <span id="currentLang">ES</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div id="langMenu" class="lang-menu hidden">
+                    <button class="lang-option" onclick="changeLang('es')">
+                        <span class="flag">🇪🇸</span>
+                        <span>Español</span>
+                    </button>
+                    <button class="lang-option" onclick="changeLang('en')">
+                        <span class="flag">🇺🇸</span>
+                        <span>English</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     <div class="seccion seccion-1">
@@ -36,11 +54,57 @@
     </div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+        // Toggle menú de idioma
+        function toggleLangMenu() {
+            const menu = document.getElementById('langMenu');
+            const selector = document.querySelector('.language-selector');
+            menu.classList.toggle('hidden');
+            if (menu.classList.contains('hidden')) {
+                selector.classList.add('closed');
+            } else {
+                selector.classList.remove('closed');
+            }
+        }
+
+        // Cambiar idioma
+        function changeLang(lang) {
+            const currentLangSpan = document.getElementById('currentLang');
+            if (lang === 'es') {
+                currentLangSpan.textContent = 'ES';
+                document.querySelector('.titulo').textContent = 'Bienvenido a Gestión de Autos Eléctricos';
+                document.querySelector('.subtitulo').textContent = 'Encuentra cargadores, gestiona tu cuenta y explora autos eléctricos fácilmente.';
+                document.querySelector('.info h2').textContent = '¿Por qué elegirnos?';
+                document.querySelector('.info p').innerHTML = 'Nuestra plataforma te permite localizar cargadores para autos eléctricos, gestionar tu información y descubrir los mejores modelos del mercado.<br>¡Únete a la movilidad sostenible!';
+                document.querySelector('.map-title').textContent = 'Cargadores Cercanos';
+                document.querySelectorAll('.top-right a')[0].textContent = 'Iniciar Sesión';
+                document.querySelectorAll('.top-right a')[1].textContent = 'Registrarse';
+            } else if (lang === 'en') {
+                currentLangSpan.textContent = 'EN';
+                document.querySelector('.titulo').textContent = 'Welcome to Electric Car Management';
+                document.querySelector('.subtitulo').textContent = 'Find chargers, manage your account and explore electric cars easily.';
+                document.querySelector('.info h2').textContent = 'Why choose us?';
+                document.querySelector('.info p').innerHTML = 'Our platform allows you to locate chargers for electric cars, manage your information and discover the best models on the market.<br>Join sustainable mobility!';
+                document.querySelector('.map-title').textContent = 'Nearby Chargers';
+                document.querySelectorAll('.top-right a')[0].textContent = 'Sign In';
+                document.querySelectorAll('.top-right a')[1].textContent = 'Sign Up';
+            }
+            toggleLangMenu();
+        }
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            const selector = document.querySelector('.language-selector');
+            const menu = document.getElementById('langMenu');
+            if (selector && !selector.contains(e.target)) {
+                menu.classList.add('hidden');
+                selector.classList.add('closed');
+            }
+        });
+
         // Obtener cargadores desde el backend usando la API
         fetch('../api/cargadores.php?accion=listar')
             .then(response => response.json())
             .then(cargadores => {
-                // Si no hay cargadores, centramos el mapa en una ubicación por defecto
                 let center = cargadores.length > 0
                     ? [cargadores[0].latitud, cargadores[0].longitud]
                     : [-34.6037, -58.3816];
@@ -57,7 +121,6 @@
                 });
             })
             .catch(() => {
-                // Si falla la carga, igual mostramos el mapa vacío
                 var map = L.map('map').setView([-34.6037, -58.3816], 11);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap contributors'

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sobre Nosotros</title>
+    <link rel="stylesheet" href="../styles/contacto.css" />
+</head>
+<body>
+    <!-- Barra superior con logo, links y selector de idioma -->
+    <div class="top-bar">
+        <img src="../img/logo.png" alt="Logo de la empresa" class="logo">
+        <div class="top-right">
+            <a href="principal.html">Inicio</a>
+            <a href="index.php">Iniciar Sesión</a>
+            <a href="registro.html">Registrarse</a>
+            <div class="language-selector closed">
+                <button class="lang-btn" onclick="toggleLangMenu()">
+                    <span class="flag">🌐</span>
+                    <span id="currentLang">ES</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div id="langMenu" class="lang-menu hidden">
+                    <button class="lang-option" onclick="changeLang('es')">
+                        <span class="flag">🇪🇸</span>
+                        <span>Español</span>
+                    </button>
+                    <button class="lang-option" onclick="changeLang('en')">
+                        <span class="flag">🇺🇸</span>
+                        <span>English</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header class="page-header">
+        <h1>Sobre Nosotros</h1>
+        <p>Conocé al equipo y su experiencia.</p>
+    </header>
+
+    <main class="team-grid">
+        <!-- Nicolás Vaz -->
+        <article id="nicolas-vaz" class="cv-card">
+            <div class="cv-head">
+                <div class="avatar" aria-hidden="true">NV</div>
+                <div>
+                    <h2>Nicolás Vaz</h2>
+                    <p class="role">Junior Developer · PC Hardware Enthusiast</p>
+                </div>
+            </div>
+
+            <section>
+                <h3>Perfil</h3>
+                <p>Estudiante de Informática con interés en hardware y software. Motivado por aprender de experiencias reales y aportar a proyectos de TI mediante trabajo en equipo, resolución de problemas y mejora continua.</p>
+            </section>
+
+            <section>
+                <h3>Experiencia</h3>
+                <ul>
+                    <li>IT Support · Bitworks Solution — Soporte a usuarios, instalación y configuración de sistemas y software, mantenimiento de redes.</li>
+                    <li>Junior Web Developer · Technova Web Studio — Apoyo en desarrollo y actualización de sitios con HTML, CSS y JavaScript; trabajo con control de versiones.</li>
+                    <li>Technical Assistant (Freelance) — Asistencia técnica y armado/mantenimiento de PC.</li>
+                </ul>
+            </section>
+
+            <section class="two-col">
+                <div>
+                    <h3>Educación</h3>
+                    <p>Escuela Técnica Pando — Tec. en Informática (en curso)</p>
+                </div>
+                <div>
+                    <h3>Habilidades</h3>
+                    <p>Java, SQL, Python, JavaScript (básico); Mantenimiento de PC; Git; Google Workspace; trabajo en equipo.</p>
+                </div>
+            </section>
+
+            <footer class="links">
+                <a href="#" class="btn">LinkedIn</a>
+                <a href="mailto:nicolas@example.com" class="btn outline">Email</a>
+            </footer>
+        </article>
+
+        <!-- Santiago Izquierdo -->
+        <article id="santiago-izquierdo" class="cv-card">
+            <div class="cv-head">
+                <div class="avatar" aria-hidden="true">SI</div>
+                <div>
+                    <h2>Santiago Izquierdo</h2>
+                    <p class="role">Technical Assistant · Junior Web Developer</p>
+                </div>
+            </div>
+
+            <section>
+                <h3>Perfil</h3>
+                <p>Estudiante de TI con experiencia en soporte técnico, desarrollo web y atención a usuarios. Enfocado en soluciones prácticas y aprendizaje continuo.</p>
+            </section>
+
+            <section>
+                <h3>Experiencia</h3>
+                <ul>
+                    <li>Technical Assistant (Freelance) — Instalación, optimización y soporte a dispositivos y sistemas.</li>
+                    <li>Junior Web Developer · Technova Web Studio — Maquetado y desarrollo con HTML, CSS, JS; trabajo con diseñadores; responsive.</li>
+                    <li>IT Support · Bitworks Solution — Soporte hardware/software y administración básica de sistemas.</li>
+                </ul>
+            </section>
+
+            <section class="two-col">
+                <div>
+                    <h3>Educación</h3>
+                    <p>Escuela Técnica Pando — Tec. en Informática</p>
+                </div>
+                <div>
+                    <h3>Habilidades</h3>
+                    <p>C++, SQL, Python, JavaScript; reparación de microhardware; Google Workspace; control de versiones; comunicación.</p>
+                </div>
+            </section>
+
+            <footer class="links">
+                <a href="#" class="btn">LinkedIn</a>
+                <a href="mailto:santiago@example.com" class="btn outline">Email</a>
+            </footer>
+        </article>
+
+        <!-- David Gonzalez -->
+        <article id="david-gonzalez" class="cv-card">
+            <div class="cv-head">
+                <div class="avatar" aria-hidden="true">DG</div>
+                <div>
+                    <h2>David Gonzalez</h2>
+                    <p class="role">Marketing Assistant · Digital Analytics</p>
+                </div>
+            </div>
+
+            <section>
+                <h3>Resumen</h3>
+                <p>Asistente de Marketing orientado a resultados con base en análisis de datos para optimizar estrategias y campañas digitales. Organizado, colaborativo y enfocado en métricas.</p>
+            </section>
+
+            <section>
+                <h3>Experiencia</h3>
+                <ul>
+                    <li>Marketing Assistant · Impulso Digital Labs — Gestión de campañas, análisis de audiencias, crecimiento en redes sociales y cumplimiento de plazos.</li>
+                </ul>
+            </section>
+
+            <section class="two-col">
+                <div>
+                    <h3>Educación</h3>
+                    <p>Cert. en Analítica de Marketing (2024) · Lic. en Marketing (2022)</p>
+                </div>
+                <div>
+                    <h3>Habilidades</h3>
+                    <p>Gestión de campañas, análisis y optimización, social media, reporting, trabajo en equipo. Idiomas: Inglés (fluido), Portugués (avanzado).</p>
+                </div>
+            </section>
+
+            <footer class="links">
+                <a href="#" class="btn">LinkedIn</a>
+                <a href="mailto:david@example.com" class="btn outline">Email</a>
+            </footer>
+        </article>
+    </main>
+
+    <footer class="page-footer">
+        <small>© 2025 Proyecto UTU</small>
+    </footer>
+
+    <script>
+        // Toggle menú de idioma
+        function toggleLangMenu() {
+            const menu = document.getElementById('langMenu');
+            const selector = document.querySelector('.language-selector');
+            menu.classList.toggle('hidden');
+            selector.classList.toggle('closed', menu.classList.contains('hidden'));
+        }
+        // Cambiar idioma (solo navegación y encabezado)
+        function changeLang(lang) {
+            const current = document.getElementById('currentLang');
+            const nav = document.querySelectorAll('.top-right a');
+            const h1 = document.querySelector('.page-header h1');
+            const p = document.querySelector('.page-header p');
+
+            if (lang === 'en') {
+                current.textContent = 'EN';
+                nav[0].textContent = 'Home';
+                nav[1].textContent = 'Sign Up';
+                nav[2].textContent = 'Contact';
+                h1.textContent = 'About Us';
+                p.textContent = 'Meet the team and their experience.';
+            } else {
+                current.textContent = 'ES';
+                nav[0].textContent = 'Inicio';
+                nav[1].textContent = 'Registrarse';
+                nav[2].textContent = 'Contacto';
+                h1.textContent = 'Sobre Nosotros';
+                p.textContent = 'Conocé al equipo y su experiencia.';
+            }
+            toggleLangMenu();
+        }
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            const selector = document.querySelector('.language-selector');
+            const menu = document.getElementById('langMenu');
+            if (selector && !selector.contains(e.target)) {
+                menu.classList.add('hidden');
+                selector.classList.add('closed');
+            }
+        });
+    </script>
+</body>
+</html>
